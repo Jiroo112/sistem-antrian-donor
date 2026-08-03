@@ -49,4 +49,34 @@ class Pendonor_model extends CI_Model {
         $row = $this->db->get()->row();
         return $row ? $row->waktu_selesai : null;
     }
+    
+    public function update_password($id_pendonor, $password_hash)
+    {
+        return $this->update($id_pendonor, ['password_hash' => $password_hash]);
+    }
+
+    // FR-1.3: buat request reset password baru
+    public function create_password_reset($id_pendonor, $token_hash, $expires_at)
+    {
+        $this->db->insert('password_resets', [
+            'id_pendonor' => $id_pendonor,
+            'token_hash'  => $token_hash,
+            'expires_at'  => $expires_at,
+        ]);
+        return $this->db->insert_id();
+    }
+
+    public function get_valid_reset_by_token_hash($token_hash)
+    {
+        $this->db->where('token_hash', $token_hash);
+        $this->db->where('used', 0);
+        $this->db->where('expires_at >=', date('Y-m-d H:i:s'));
+        return $this->db->get('password_resets')->row();
+    }
+
+    public function mark_reset_used($id_reset)
+    {
+        $this->db->where('id_reset', $id_reset);
+        return $this->db->update('password_resets', ['used' => 1]);
+    }
 }

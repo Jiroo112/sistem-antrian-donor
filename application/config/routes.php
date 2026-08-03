@@ -61,3 +61,12 @@ $route['translate_uri_dashes'] = FALSE;
 // Modul 4.1: Registrasi dan Autentikasi (FR-1.1, FR-1.2)
 $route['auth/register']['post'] = 'auth/register';
 $route['auth/login']['post']    = 'auth/login';
+
+// FR-1.3: Lupa Kata Sandi
+$route['auth/forgot-password']['post'] = 'auth/forgot_password';
+$route['auth/reset-password']['post']  = 'auth/reset_password';
+
+// FR-1.4: Manajemen Sesi & Perangkat
+$route['auth/sessions']['get']        = 'auth/sessions';
+$route['auth/logout']['post']         = 'auth/logout';
+$route['auth/logout-others']['post']  = 'auth/logout_others';

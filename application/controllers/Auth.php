@@ -114,7 +114,16 @@ class Auth extends MY_Controller {
             return;
         }
 
-        $token = $this->generate_token($pendonor);
+        // FR-1.4: catat perangkat yang login
+        $jti = bin2hex(random_bytes(16));
+        $this->Session_model->create_session(
+            $pendonor->id_pendonor,
+            $jti,
+            (string) $this->input->user_agent(),
+            (string) $this->input->ip_address()
+        );
+
+        $token = $this->generate_token($pendonor, $jti);
 
         json_response(200, 'success', 'Login berhasil', [
             'token'       => $token,
@@ -145,15 +154,16 @@ class Auth extends MY_Controller {
         return $lahir->diff($sekarang)->y;
     }
 
-    private function generate_token($pendonor)
+    private function generate_token($pendonor, $jti)
     {
         $key = $this->config->item('jwt_secret_key');
         $issued_at = time();
-        $expire = $issued_at + (60 * 60 * 12); // token berlaku 12 jam
+        $expire = $issued_at + (60 * 60 * 12);
 
         $payload = [
             'iat'         => $issued_at,
             'exp'         => $expire,
+            'jti'         => $jti,
             'id_pendonor' => $pendonor->id_pendonor,
             'nama'        => $pendonor->nama,
             'peran'       => 'pendonor',
@@ -161,4 +171,94 @@ class Auth extends MY_Controller {
 
         return \Firebase\JWT\JWT::encode($payload, $key, 'HS256');
     }
+
+    public function forgot_password()
+    {
+        $this->get_json_input();
+
+        $this->form_validation->set_rules('email', 'Email', 'required|valid_email');
+        if ($this->form_validation->run() === FALSE) {
+            json_response(422, 'error', 'Validasi gagal', $this->form_validation->error_array());
+            return;
+        }
+
+        $pendonor = $this->Pendonor_model->get_by_email($this->input->post('email'));
+
+        // Sengaja tidak bilang "email tidak ditemukan" biar endpoint ini
+        // tidak bisa dipakai buat menebak-nebak email yang terdaftar.
+        if (!$pendonor) {
+            json_response(200, 'success', 'Jika email terdaftar, instruksi reset password telah dikirim');
+            return;
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $token_hash = hash('sha256', $token);
+        $expires_at = date('Y-m-d H:i:s', time() + (30 * 60)); // berlaku 30 menit
+
+        $this->Pendonor_model->create_password_reset($pendonor->id_pendonor, $token_hash, $expires_at);
+
+        json_response(200, 'success', 'Jika email terdaftar, instruksi reset password telah dikirim', [
+            'reset_token_DEV_ONLY' => $token,
+            'catatan' => 'Field ini cuma buat testing lokal. Nanti di production token ini dikirim lewat email, BUKAN lewat response API.',
+        ]);
+    }
+    public function reset_password()
+    {
+        $this->get_json_input();
+
+        $this->form_validation->set_rules('token', 'Token', 'required');
+        $this->form_validation->set_rules('password_baru', 'Password Baru', 'required|min_length[8]');
+        if ($this->form_validation->run() === FALSE) {
+            json_response(422, 'error', 'Validasi gagal', $this->form_validation->error_array());
+            return;
+        }
+
+        $token_hash = hash('sha256', $this->input->post('token'));
+        $reset = $this->Pendonor_model->get_valid_reset_by_token_hash($token_hash);
+
+        if (!$reset) {
+            json_response(400, 'error', 'Token reset tidak valid atau sudah kedaluwarsa');
+            return;
+        }
+
+        $this->Pendonor_model->update_password(
+            $reset->id_pendonor,
+            password_hash($this->input->post('password_baru'), PASSWORD_BCRYPT)
+        );
+        $this->Pendonor_model->mark_reset_used($reset->id_reset);
+
+        // Demi keamanan, logout semua perangkat begitu password diganti
+        $this->Session_model->logout_all_except($reset->id_pendonor, '');
+
+        json_response(200, 'success', 'Password berhasil direset, silakan login kembali');
+    }
+    public function sessions()
+    {
+        $this->verify_token();
+
+        $list = $this->Session_model->get_active_sessions($this->user_data->id_pendonor);
+
+        json_response(200, 'success', 'Daftar perangkat aktif', $list);
+    }
+    public function logout()
+    {
+        $this->verify_token();
+
+        if (isset($this->user_data->jti)) {
+            $this->Session_model->logout_by_jti($this->user_data->jti);
+        }
+
+        json_response(200, 'success', 'Berhasil logout');
+    }
+    public function logout_others()
+    {
+        $this->verify_token();
+
+        $current_jti = $this->user_data->jti ?? '';
+        $this->Session_model->logout_all_except($this->user_data->id_pendonor, $current_jti);
+
+        json_response(200, 'success', 'Berhasil logout dari semua perangkat lain');
+    }
 }
+
+
