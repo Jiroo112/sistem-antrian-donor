@@ -52,3 +52,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $route['default_controller'] = 'welcome';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
+
+/*
+| -------------------------------------------------------------------------
+| API ROUTES - Sistem Antrian Online Donor Darah
+| -------------------------------------------------------------------------
+*/
+// Modul 4.1: Registrasi dan Autentikasi (FR-1.1, FR-1.2)
+$route['auth/register']['post'] = 'auth/register';
+$route['auth/login']['post']    = 'auth/login';

@@ -66,7 +66,9 @@
 switch (ENVIRONMENT)
 {
 	case 'development':
-		error_reporting(-1);
+		// CI3 core memicu banyak E_DEPRECATED di PHP 8.1+ (dynamic properties).
+		// Ini disembunyikan supaya tidak tercampur ke body JSON pada response API.
+		error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 		ini_set('display_errors', 1);
 	break;
 

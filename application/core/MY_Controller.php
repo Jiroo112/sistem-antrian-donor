@@ -8,6 +8,7 @@ class MY_Controller extends CI_Controller {
     public function __construct()
     {
         parent::__construct();
+        $this->load->database();
         $this->load->helper('api_response');
     }
 
@@ -27,7 +28,7 @@ class MY_Controller extends CI_Controller {
             $key = $this->config->item('jwt_secret_key');
             $decoded = \Firebase\JWT\JWT::decode($jwt, new \Firebase\JWT\Key($key, 'HS256'));
             $this->user_data = $decoded;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             json_response(401, 'error', 'Token tidak valid atau kedaluwarsa');
             exit;
         }
