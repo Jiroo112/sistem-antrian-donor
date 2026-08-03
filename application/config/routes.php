@@ -61,6 +61,8 @@ $route['translate_uri_dashes'] = FALSE;
 // Modul 4.1: Registrasi dan Autentikasi (FR-1.1, FR-1.2)
 $route['auth/register']['post'] = 'auth/register';
 $route['auth/login']['post']    = 'auth/login';
+$route['auth/verify-otp']['post'] = 'auth/verify_otp';
+$route['auth/resend-otp']['post'] = 'auth/resend_otp';
 
 // FR-1.3: Lupa Kata Sandi
 $route['auth/forgot-password']['post'] = 'auth/forgot_password';
