@@ -5,11 +5,21 @@ class Lokasi_model extends CI_Model {
 
     protected $table = 'lokasi_donor';
 
-    public function get_all($filter_status = null)
+    public function get_all($filter = array())
     {
-        if ($filter_status) {
-            $this->db->where('status_lokasi', $filter_status);
+        // Backward-compat: kalau masih ada kode lain yang manggil get_all('aktif')
+        // gaya lama (string, bukan array), tetap diperlakukan sebagai filter status.
+        if (is_string($filter)) {
+            $filter = array('status_lokasi' => $filter);
         }
+
+        if (!empty($filter['status_lokasi'])) {
+            $this->db->where('status_lokasi', $filter['status_lokasi']);
+        }
+        if (!empty($filter['jenis'])) {
+            $this->db->where('jenis', $filter['jenis']);
+        }
+
         return $this->db->get($this->table)->result();
     }
 

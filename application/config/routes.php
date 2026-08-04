@@ -76,6 +76,8 @@ $route['auth/logout-others']['post']  = 'auth/logout_others';
 
 // FR-3.1 + FR-3.3: Cari Jadwal Donor & Info Kuota Tersedia (publik, tanpa login)
 $route['jadwal/cari']['get'] = 'jadwal/cari';
+// FR-3.2: Peta Lokasi Donor -- publik, tanpa login
+$route['lokasi/peta']['get'] = 'lokasi/peta';
 
 // FR-7.1: Kelola Jadwal & Kuota (admin) -- pakai default routing CI3
 // (admin/jadwal/index, admin/jadwal/detail/:id, admin/jadwal/create,
