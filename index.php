@@ -38,6 +38,29 @@
 
 /*
  *---------------------------------------------------------------
+ * CORS (Cross-Origin Resource Sharing)
+ *---------------------------------------------------------------
+ *
+ * Ditambahkan supaya frontend (yang di-serve dari origin/port lain,
+ * mis. dibuka langsung dari folder frontend/ atau lewat live-server)
+ * bisa memanggil API ini. Preflight request (OPTIONS) dihentikan di
+ * sini juga, SEBELUM CodeIgniter di-bootstrap, karena routes.php di
+ * project ini didaftarkan per-method (post/get/put) sehingga request
+ * OPTIONS tidak akan pernah cocok dengan rute manapun dan akan selalu
+ * berakhir 404 kalau tidak ditangani lebih dulu di sini.
+ *---------------------------------------------------------------
+ */
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    header('HTTP/1.1 204 No Content');
+    exit;
+}
+
+/*
+ *---------------------------------------------------------------
  * APPLICATION ENVIRONMENT
  *---------------------------------------------------------------
  *
