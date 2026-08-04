@@ -1048,6 +1048,23 @@ class CI_Form_validation {
 	// --------------------------------------------------------------------
 
 	/**
+	 * Permit_Empty
+	 *
+	 * A placeholder rule that always passes. The actual "skip this field
+	 * when it's empty" behavior lives earlier in _execute(); this method
+	 * only needs to exist so that when a field DOES have a value, the
+	 * rule pipeline doesn't fail on an unrecognized rule name.
+	 *
+	 * @return	bool
+	 */
+	public function permit_empty()
+	{
+		return TRUE;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
 	 * Required
 	 *
 	 * @param	string
