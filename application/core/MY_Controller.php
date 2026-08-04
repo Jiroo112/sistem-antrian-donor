@@ -34,8 +34,15 @@ class MY_Controller extends CI_Controller {
         exit;
     }
 
-    // Cek apakah sesi (jti) ini masih aktif di database
-    if (isset($this->user_data->jti)) {
+    // Cek apakah sesi (jti) ini masih aktif di database.
+    // PENTING: pengecekan ini hanya berlaku untuk token PENDONOR, karena
+    // cuma login() (bukan login_internal()) yang mencatat sesi ke tabel
+    // sesi_pendonor -- token staf internal (admin/petugas) tidak pernah
+    // masuk ke tabel ini, jadi kalau dicek tanpa syarat, token admin
+    // akan SELALU ditolak 401 "Sesi sudah berakhir" walau tokennya valid.
+    $is_token_pendonor = isset($this->user_data->peran) && $this->user_data->peran === 'pendonor';
+
+    if ($is_token_pendonor && isset($this->user_data->jti)) {
         $sesi = $this->Session_model->get_by_jti($this->user_data->jti);
         if (!$sesi || $sesi->status !== 'aktif') {
             json_response(401, 'error', 'Sesi sudah berakhir, silakan login kembali');

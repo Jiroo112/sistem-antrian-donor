@@ -61,6 +61,7 @@ $route['translate_uri_dashes'] = FALSE;
 // Modul 4.1: Registrasi dan Autentikasi (FR-1.1, FR-1.2)
 $route['auth/register']['post'] = 'auth/register';
 $route['auth/login']['post']    = 'auth/login';
+$route['auth/login-internal']['post'] = 'auth/login_internal';
 $route['auth/verify-otp']['post'] = 'auth/verify_otp';
 $route['auth/resend-otp']['post'] = 'auth/resend_otp';
 
@@ -72,3 +73,11 @@ $route['auth/reset-password']['post']  = 'auth/reset_password';
 $route['auth/sessions']['get']        = 'auth/sessions';
 $route['auth/logout']['post']         = 'auth/logout';
 $route['auth/logout-others']['post']  = 'auth/logout_others';
+
+// FR-3.1 + FR-3.3: Cari Jadwal Donor & Info Kuota Tersedia (publik, tanpa login)
+$route['jadwal/cari']['get'] = 'jadwal/cari';
+
+// FR-7.1: Kelola Jadwal & Kuota (admin) -- pakai default routing CI3
+// (admin/jadwal/index, admin/jadwal/detail/:id, admin/jadwal/create,
+// admin/jadwal/update/:id, admin/jadwal/delete/:id), sama seperti pola
+// admin/Lokasi.php yang juga tidak butuh entry eksplisit di sini.

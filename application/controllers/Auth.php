@@ -291,6 +291,63 @@ class Auth extends MY_Controller {
         ]);
     }
 
+    public function login_internal()
+    {
+        $this->get_json_input();
+
+        $this->form_validation->set_rules('email', 'Email', 'required|valid_email');
+        $this->form_validation->set_rules('password', 'Password', 'required');
+
+        if ($this->form_validation->run() === FALSE) {
+            json_response(422, 'error', 'Validasi gagal', $this->form_validation->error_array());
+            return;
+        }
+
+        $email = $this->input->post('email');
+        $password = $this->input->post('password');
+
+        $this->load->model('Pengguna_internal_model');
+        $user = $this->Pengguna_internal_model->get_by_email($email);
+
+        if (!$user || !password_verify($password, $user->password_hash)) {
+            json_response(401, 'error', 'Email atau password salah');
+            return;
+        }
+
+        if ($user->status_akun !== 'aktif') {
+            json_response(403, 'error', 'Akun tidak aktif, hubungi super admin');
+            return;
+        }
+
+        $jti = bin2hex(random_bytes(16));
+        $token = $this->generate_token_internal($user, $jti);
+
+        json_response(200, 'success', 'Login berhasil', [
+            'token'       => $token,
+            'id_pengguna' => $user->id_pengguna,
+            'nama'        => $user->nama,
+            'peran'       => $user->peran,
+        ]);
+    }
+
+    private function generate_token_internal($user, $jti)
+    {
+        $key = $this->config->item('jwt_secret_key');
+        $issued_at = time();
+        $expire = $issued_at + (60 * 60 * 12);
+
+        $payload = [
+            'iat'         => $issued_at,
+            'exp'         => $expire,
+            'jti'         => $jti,
+            'id_pengguna' => $user->id_pengguna,
+            'nama'        => $user->nama,
+            'peran'       => $user->peran, // 'petugas_loket' / 'admin_udd' / 'super_admin'
+        ];
+
+        return \Firebase\JWT\JWT::encode($payload, $key, 'HS256');
+    }
+
     /**
      * Callback form_validation: pastikan format tanggal Y-m-d dan tanggal itu benar-benar ada
      * (CI3 tidak punya rule 'valid_date' bawaan).

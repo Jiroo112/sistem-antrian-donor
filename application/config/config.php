@@ -36,7 +36,7 @@ $config['base_url'] = 'http://sistem-antrian-donor.test/';
 |
 */
 $config['index_page'] = '';
-$config['jwt_secret_key'] = '2f35a5c031f63c8191359af05c8bd9e0bc5fe505f3e7b1e4b553001dc9aaf7e7';
+$config['jwt_secret_key'] = 'b184818e230766da2539b4a009dca49082b6232cc4fe0633d18cd1574fe9c2fb';
 
 /*
 |--------------------------------------------------------------------------
