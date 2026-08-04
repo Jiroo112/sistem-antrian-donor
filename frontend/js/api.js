@@ -1,11 +1,23 @@
 /**
  * api.js — klien kecil untuk memanggil REST API "Sistem Antrian Online Donor Darah".
  *
- * UBAH baris di bawah ini sesuai alamat backend CodeIgniter kamu, misalnya:
- *   'http://localhost:8080'
- *   'http://sistem-antrian-donor.test'
+ * Alamat API dideteksi otomatis dari lokasi file ini sendiri (origin + folder
+ * dasar tempat proyek diakses, ditambah "/api"), jadi tidak perlu diisi manual.
+ * Kalau backend ada di alamat lain, timpa lewat window.__API_BASE_URL__
+ * SEBELUM tag <script src="js/api.js"> dimuat.
  */
-const API_BASE_URL = window.__API_BASE_URL__ || 'http://sistem-antrian-donor.test';
+function detectBasePath(scriptSuffix) {
+  const src = document.currentScript && document.currentScript.src;
+  if (!src) return '';
+  try {
+    const path = new URL(src).pathname;
+    return path.endsWith(scriptSuffix) ? path.slice(0, -scriptSuffix.length) : '';
+  } catch (_) {
+    return '';
+  }
+}
+
+const API_BASE_URL = window.__API_BASE_URL__ || (location.origin + detectBasePath('/js/api.js') + '/api');
 
 const TOKEN_KEY_PENDONOR = 'antrian_donor_token_pendonor';
 const TOKEN_KEY_INTERNAL = 'antrian_donor_token_internal';

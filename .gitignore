@@ -1,5 +1,8 @@
 .DS_Store
 
+# Kredensial rahasia (SMTP, token gateway, dll) -- lihat .env.example
+.env
+
 application/cache/*
 !application/cache/index.html
 

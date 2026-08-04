@@ -2,7 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * Abstraksi pengiriman kode OTP lewat SMS/WhatsApp.
+ * Abstraksi pengiriman kode OTP lewat Email/SMS/WhatsApp.
  *
  * Driver aktif ditentukan lewat $config['otp_gateway_driver'] di
  * application/config/otp.php. Untuk menambah provider baru, tambahkan
@@ -21,24 +21,46 @@ class Otp_gateway {
     }
 
     /**
-     * Kirim kode OTP ke nomor telepon tujuan.
+     * Kirim kode OTP ke tujuan (alamat email atau nomor telepon, tergantung driver aktif).
      *
-     * @param string $no_telp   Nomor telepon tujuan
-     * @param string $otp_code  Kode OTP plain (belum di-hash)
-     * @param string $channel   'whatsapp' atau 'sms', cuma dipakai driver 'log'
+     * @param string $destination  Alamat email (driver 'mail') atau nomor telepon (driver 'fonnte'/'twilio')
+     * @param string $otp_code     Kode OTP plain (belum di-hash)
+     * @param string $channel      'email', 'whatsapp', atau 'sms', cuma dipakai driver 'log'
      * @return bool TRUE kalau berhasil dikirim/dicatat
      */
-    public function send($no_telp, $otp_code, $channel = 'whatsapp')
+    public function send($destination, $otp_code, $channel = 'email')
     {
         switch ($this->driver) {
+            case 'mail':
+                return $this->send_via_mail($destination, $otp_code);
             case 'fonnte':
-                return $this->send_via_fonnte($no_telp, $otp_code);
+                return $this->send_via_fonnte($destination, $otp_code);
             case 'twilio':
-                return $this->send_via_twilio($no_telp, $otp_code);
+                return $this->send_via_twilio($destination, $otp_code);
             case 'log':
             default:
-                return $this->send_via_log($no_telp, $otp_code, $channel);
+                return $this->send_via_log($destination, $otp_code, $channel);
         }
+    }
+
+    /**
+     * Kirim OTP lewat email (SMTP) -- gratis pakai akun Gmail + App Password,
+     * tidak perlu verifikasi bisnis seperti WhatsApp Business API.
+     * Isi smtp_user/smtp_pass di application/config/otp.php sebelum dipakai.
+     */
+    protected function send_via_mail($email, $otp_code)
+    {
+        $ttl = (int) $this->CI->config->item('otp_ttl_minutes');
+
+        $this->CI->load->library('Mailer');
+
+        return $this->CI->mailer->send(
+            $email,
+            'Kode Verifikasi Akun - Sistem Antrian Donor Darah',
+            '<p>Kode verifikasi akun kamu:</p>' .
+            '<p style="font-size:28px;font-weight:bold;letter-spacing:6px;">' . htmlspecialchars($otp_code) . '</p>' .
+            "<p>Kode ini berlaku {$ttl} menit. Jangan bagikan kode ini kepada siapa pun.</p>"
+        );
     }
 
     /**

@@ -3,6 +3,26 @@ RewriteEngine On
 RewriteCond %{HTTP:Authorization} .
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
+# Backend REST API (CodeIgniter), selalu dipanggil lewat prefix /api/
+# supaya tidak tabrakan dengan rute halaman SPA (mis. /profil).
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php?/$1 [L,QSA]
+RewriteRule ^api/(.*)$ index.php?/$1 [L,QSA]
+
+# Sajikan UI pendonor & panel admin dari folder frontend/ tanpa
+# menampilkan struktur foldernya di URL. UI pendonor & internal dipisah
+# secara fisik di frontend/pendonor/ dan frontend/internal/, sedangkan
+# aset yang dipakai bersama (css/, js/api.js) tetap satu tempat.
+RewriteRule ^$ frontend/pendonor/index.html [L]
+RewriteRule ^admin\.html$ frontend/internal/admin.html [L]
+RewriteRule ^css/(.+)$ frontend/css/$1 [L]
+RewriteRule ^js/app\.js$ frontend/pendonor/app.js [L]
+RewriteRule ^js/admin\.js$ frontend/internal/admin.js [L]
+RewriteRule ^js/(.+)$ frontend/js/$1 [L]
+
+# SPA Pendonor: semua rute lain yang bukan file/direktori nyata (mis.
+# /jadwal, /dashboard) diarahkan ke index.html supaya URL tanpa "#"
+# tetap berfungsi saat direfresh atau dibuka di tab baru.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ frontend/pendonor/index.html [L]

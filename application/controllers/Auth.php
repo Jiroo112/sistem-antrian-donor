@@ -30,9 +30,8 @@ class Auth extends MY_Controller {
      * POST /auth/register
      * Body: nik, nama, tanggal_lahir (YYYY-MM-DD), jenis_kelamin (L/P), no_telp, email, password
      *
-     * Catatan: verifikasi OTP (SMS/WhatsApp) belum diimplementasikan di sini
-     * karena butuh integrasi gateway pihak ketiga (mis. Twilio/Zenziva/Fonnte).
-     * Untuk sekarang akun langsung aktif setelah registrasi.
+     * Kode OTP verifikasi dikirim ke email pendonor (lihat kirim_otp_registrasi()
+     * & Otp_gateway::send_via_mail()).
      */
     public function register()
     {
@@ -74,7 +73,7 @@ class Auth extends MY_Controller {
 
         $otp_info = $this->kirim_otp_registrasi($pendonor);
 
-        json_response(201, 'success', 'Registrasi berhasil, silakan cek WhatsApp/SMS untuk kode verifikasi OTP', array_merge([
+        json_response(201, 'success', 'Registrasi berhasil, silakan cek email untuk kode verifikasi OTP', array_merge([
             'id_pendonor' => $pendonor->id_pendonor,
             'nama'        => $pendonor->nama,
             'email'       => $pendonor->email,
@@ -209,22 +208,22 @@ class Auth extends MY_Controller {
         $this->Otp_model->create([
             'id_pendonor' => $pendonor->id_pendonor,
             'tujuan'      => 'registrasi',
-            'channel'     => 'whatsapp',
+            'channel'     => 'email',
             'otp_hash'    => $otp_hash,
             'expires_at'  => $expires_at,
         ]);
 
-        $terkirim = $this->otp_gateway->send($pendonor->no_telp, $otp_code, 'whatsapp');
+        $terkirim = $this->otp_gateway->send($pendonor->email, $otp_code, 'email');
 
         $response = [
             'otp_terkirim'      => $terkirim,
             'otp_berlaku_menit' => $ttl_minutes,
         ];
 
-        // Field DEV_ONLY cuma muncul kalau driver gateway masih 'log' (belum ada
-        // akun WhatsApp/SMS gateway asli). Nanti kalau ganti driver, field ini
-        // otomatis hilang.
-        if ($this->config->item('otp_gateway_driver') === 'log') {
+        // Field DEV_ONLY muncul kalau driver gateway masih 'log', ATAU kalau
+        // pengiriman asli gagal (mis. smtp_user/smtp_pass belum diisi) --
+        // supaya alur registrasi tidak pernah buntu waktu development.
+        if ($this->config->item('otp_gateway_driver') === 'log' || !$terkirim) {
             $response['otp_code_DEV_ONLY'] = $otp_code;
             $response['catatan'] = 'Field ini cuma buat testing lokal karena OTP gateway belum dikonfigurasi ke provider asli.';
         }
@@ -263,7 +262,7 @@ class Auth extends MY_Controller {
         }
 
         if ($pendonor->status_akun === 'menunggu_verifikasi') {
-            json_response(403, 'error', 'Akun belum diverifikasi, silakan cek WhatsApp/SMS untuk kode OTP atau minta kirim ulang lewat /auth/resend-otp');
+            json_response(403, 'error', 'Akun belum diverifikasi, silakan cek email untuk kode OTP atau minta kirim ulang lewat /auth/resend-otp');
             return;
         }
 
@@ -412,10 +411,28 @@ class Auth extends MY_Controller {
 
         $this->Pendonor_model->create_password_reset($pendonor->id_pendonor, $token_hash, $expires_at);
 
-        json_response(200, 'success', 'Jika email terdaftar, instruksi reset password telah dikirim', [
+        $reset_link = rtrim($this->config->item('base_url'), '/') . '/reset-password?token=' . $token;
+
+        $this->load->library('Mailer');
+        $terkirim = $this->mailer->send(
+            $pendonor->email,
+            'Atur Ulang Kata Sandi - Sistem Antrian Donor Darah',
+            '<p>Halo ' . htmlspecialchars($pendonor->nama) . ',</p>' .
+            '<p>Ada permintaan atur ulang kata sandi untuk akunmu. Klik tombol di bawah untuk membuat kata sandi baru (berlaku 30 menit):</p>' .
+            '<p><a href="' . htmlspecialchars($reset_link) . '" style="display:inline-block;padding:10px 20px;background:#9d1e33;color:#fff;text-decoration:none;border-radius:6px;">Atur Ulang Kata Sandi</a></p>' .
+            '<p>Atau salin tautan ini ke browser:<br>' . htmlspecialchars($reset_link) . '</p>' .
+            '<p>Kalau kamu tidak merasa meminta ini, abaikan saja email ini.</p>'
+        );
+
+        // Field DEV_ONLY cuma muncul kalau email beneran gagal dikirim (mis.
+        // smtp_user/smtp_pass belum diisi) -- supaya alur reset password
+        // tidak pernah buntu waktu development.
+        $response = $terkirim ? null : [
             'reset_token_DEV_ONLY' => $token,
-            'catatan' => 'Field ini cuma buat testing lokal. Nanti di production token ini dikirim lewat email, BUKAN lewat response API.',
-        ]);
+            'catatan' => 'Field ini cuma buat testing lokal karena email gagal dikirim (cek konfigurasi SMTP di application/config/otp.php).',
+        ];
+
+        json_response(200, 'success', 'Jika email terdaftar, instruksi reset password telah dikirim', $response);
     }
     public function reset_password()
     {

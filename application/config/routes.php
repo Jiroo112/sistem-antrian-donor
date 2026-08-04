@@ -57,27 +57,30 @@ $route['translate_uri_dashes'] = FALSE;
 | -------------------------------------------------------------------------
 | API ROUTES - Sistem Antrian Online Donor Darah
 | -------------------------------------------------------------------------
+| Semua endpoint API diakses lewat prefix "api/" (lihat .htaccess) supaya
+| tidak tabrakan dengan rute halaman frontend SPA yang path-nya sudah bersih
+| tanpa "#" (mis. frontend "/profil" vs endpoint API "profil").
 */
 // Modul 4.1: Registrasi dan Autentikasi (FR-1.1, FR-1.2)
-$route['auth/register']['post'] = 'auth/register';
-$route['auth/login']['post']    = 'auth/login';
-$route['auth/login-internal']['post'] = 'auth/login_internal';
-$route['auth/verify-otp']['post'] = 'auth/verify_otp';
-$route['auth/resend-otp']['post'] = 'auth/resend_otp';
+$route['api/auth/register']['post'] = 'auth/register';
+$route['api/auth/login']['post']    = 'auth/login';
+$route['api/auth/login-internal']['post'] = 'auth/login_internal';
+$route['api/auth/verify-otp']['post'] = 'auth/verify_otp';
+$route['api/auth/resend-otp']['post'] = 'auth/resend_otp';
 
 // FR-1.3: Lupa Kata Sandi
-$route['auth/forgot-password']['post'] = 'auth/forgot_password';
-$route['auth/reset-password']['post']  = 'auth/reset_password';
+$route['api/auth/forgot-password']['post'] = 'auth/forgot_password';
+$route['api/auth/reset-password']['post']  = 'auth/reset_password';
 
 // FR-1.4: Manajemen Sesi & Perangkat
-$route['auth/sessions']['get']        = 'auth/sessions';
-$route['auth/logout']['post']         = 'auth/logout';
-$route['auth/logout-others']['post']  = 'auth/logout_others';
+$route['api/auth/sessions']['get']        = 'auth/sessions';
+$route['api/auth/logout']['post']         = 'auth/logout';
+$route['api/auth/logout-others']['post']  = 'auth/logout_others';
 
 // FR-3.1 + FR-3.3: Cari Jadwal Donor & Info Kuota Tersedia (publik, tanpa login)
-$route['jadwal/cari']['get'] = 'jadwal/cari';
+$route['api/jadwal/cari']['get'] = 'jadwal/cari';
 // FR-3.2: Peta Lokasi Donor -- publik, tanpa login
-$route['lokasi/peta']['get'] = 'lokasi/peta';
+$route['api/lokasi/peta']['get'] = 'lokasi/peta';
 
 // FR-7.1: Kelola Jadwal & Kuota (admin) -- pakai default routing CI3
 // (admin/jadwal/index, admin/jadwal/detail/:id, admin/jadwal/create,
@@ -85,8 +88,13 @@ $route['lokasi/peta']['get'] = 'lokasi/peta';
 // admin/Lokasi.php yang juga tidak butuh entry eksplisit di sini.
 
 // Modul 4.2: Profil Pendonor dan Kesehatan (FR-2.1, FR-2.2, FR-2.3)
-$route['profil']['get']             = 'profil/index';
-$route['profil']['put']             = 'profil/update';
-$route['profil/kuesioner']['get']   = 'profil/kuesioner_form';
-$route['profil/kuesioner']['post']  = 'profil/kuesioner_submit';
-$route['profil/kartu-donor']['get'] = 'profil/kartu_donor';
+$route['api/profil']['get']             = 'profil/index';
+$route['api/profil']['put']             = 'profil/update';
+$route['api/profil/kuesioner']['get']   = 'profil/kuesioner_form';
+$route['api/profil/kuesioner']['post']  = 'profil/kuesioner_submit';
+$route['api/profil/kartu-donor']['get'] = 'profil/kartu_donor';
+
+// Fallback: rute lain di bawah prefix "api/" (mis. admin/jadwal/*,
+// admin/lokasi/* yang pakai default routing CI3 di atas) diteruskan apa
+// adanya setelah prefix "api/" dibuang.
+$route['api/(.+)'] = '$1';

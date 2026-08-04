@@ -16,16 +16,16 @@ class Jadwal extends MY_Controller {
         $this->load->model('Jadwal_model');
     }
 
-    // GET /jadwal/cari?id_lokasi=&tanggal=&lat=&lng=&limit=&offset=
+    // GET /jadwal/cari?nama_lokasi=&tanggal=&lat=&lng=&limit=&offset=
     public function cari()
     {
         $filter = [
-            'id_lokasi' => $this->input->get('id_lokasi'),
-            'tanggal'   => $this->input->get('tanggal'),
-            'lat'       => $this->input->get('lat'),
-            'lng'       => $this->input->get('lng'),
-            'limit'     => $this->input->get('limit'),
-            'offset'    => $this->input->get('offset'),
+            'nama_lokasi' => $this->input->get('nama_lokasi'),
+            'tanggal'     => $this->input->get('tanggal'),
+            'lat'         => $this->input->get('lat'),
+            'lng'         => $this->input->get('lng'),
+            'limit'       => $this->input->get('limit'),
+            'offset'      => $this->input->get('offset'),
         ];
 
         $data = $this->Jadwal_model->cari($filter);

@@ -33,8 +33,8 @@ class Jadwal_model extends CI_Model {
         $this->db->where('lokasi_donor.status_lokasi', 'aktif');
         $this->db->where('jadwal_donor.kuota_tersisa >', 0);
 
-        if (!empty($filter['id_lokasi'])) {
-            $this->db->where('jadwal_donor.id_lokasi', $filter['id_lokasi']);
+        if (!empty($filter['nama_lokasi'])) {
+            $this->db->like('lokasi_donor.nama_lokasi', $filter['nama_lokasi']);
         }
 
         if (!empty($filter['tanggal'])) {

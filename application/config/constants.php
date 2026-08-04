@@ -3,6 +3,32 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /*
 |--------------------------------------------------------------------------
+| .env loader
+|--------------------------------------------------------------------------
+|
+| Dimuat paling awal (constants.php di-include duluan oleh CodeIgniter
+| sebelum config lain kayak otp.php) supaya fungsi env() sudah ada saat
+| dibutuhkan buat baca kredensial rahasia (SMTP, token gateway, dll) dari
+| file .env di root project -- file itu TIDAK di-commit ke git.
+*/
+require_once APPPATH . 'helpers/env_helper.php';
+
+/*
+|--------------------------------------------------------------------------
+| Timezone
+|--------------------------------------------------------------------------
+|
+| PHP default timezone is UTC kalau tidak diset, sedangkan MySQL di server
+| ini pakai timezone SYSTEM (Asia/Jakarta/WIB, UTC+7). Kalau tidak disamakan,
+| perbandingan waktu antara PHP (mis. time(), date()) dan kolom timestamp
+| yang diisi otomatis oleh MySQL (DEFAULT CURRENT_TIMESTAMP, mis. created_at)
+| bakal meleset ~7 jam -- ini penyebab bug cooldown resend OTP yang kelihatan
+| "kelamaan" padahal konfigurasinya sudah 60 detik.
+*/
+date_default_timezone_set('Asia/Jakarta');
+
+/*
+|--------------------------------------------------------------------------
 | Display Debug backtrace
 |--------------------------------------------------------------------------
 |

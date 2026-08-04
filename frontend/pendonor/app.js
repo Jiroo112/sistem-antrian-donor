@@ -1,9 +1,30 @@
-/* app.js — SPA untuk sisi Pendonor (publik + area login) menggunakan hash-router sederhana. */
+/* app.js — SPA untuk sisi Pendonor (publik + area login) menggunakan router berbasis History API. */
 
 const app = document.getElementById('app');
 const navSlot = document.getElementById('nav-slot');
+// Dideteksi otomatis dari lokasi app.js sendiri; timpa lewat window.__BASE_PATH__
+// SEBELUM tag <script src="js/app.js"> kalau proyek diakses dari path lain.
+const BASE_PATH = (window.__BASE_PATH__ !== undefined ? window.__BASE_PATH__ : detectBasePath('/js/app.js')).replace(/\/+$/, '');
 
 /* ---------------------------- helpers ---------------------------- */
+
+function routeHref(path) {
+  return BASE_PATH + path;
+}
+
+function currentPath() {
+  let path = location.pathname;
+  if (BASE_PATH && path.startsWith(BASE_PATH)) path = path.slice(BASE_PATH.length);
+  return path || '/';
+}
+
+function navigate(path) {
+  const url = routeHref(path);
+  if (location.pathname !== url) {
+    history.pushState(null, '', url);
+  }
+  router();
+}
 
 function el(html) {
   const t = document.createElement('template');
@@ -57,7 +78,7 @@ function setLoading(buttonEl, loading, labelWhenIdle) {
 function requireAuth() {
   if (!Auth.isLoggedIn('pendonor')) {
     toast('Silakan masuk terlebih dahulu untuk mengakses halaman ini.', 'error');
-    location.hash = '#/masuk';
+    navigate('/masuk');
     return false;
   }
   return true;
@@ -70,23 +91,23 @@ function renderNav() {
   navSlot.innerHTML = '';
   const links = loggedIn
     ? [
-        ['#/jadwal', 'Cari Jadwal'],
-        ['#/lokasi', 'Lokasi'],
-        ['#/dashboard', 'Dasbor Saya'],
+        ['/jadwal', 'Cari Jadwal'],
+        ['/lokasi', 'Lokasi'],
+        ['/dashboard', 'Dasbor Saya'],
       ]
     : [
-        ['#/jadwal', 'Cari Jadwal'],
-        ['#/lokasi', 'Lokasi'],
+        ['/jadwal', 'Cari Jadwal'],
+        ['/lokasi', 'Lokasi'],
       ];
-  links.forEach(([href, label]) => {
-    const a = el(`<a class="nav__link" href="${href}">${label}</a>`);
+  links.forEach(([path, label]) => {
+    const a = el(`<a class="nav__link" href="${routeHref(path)}" data-route="${path}">${label}</a>`);
     navSlot.appendChild(a);
   });
   if (loggedIn) {
     navSlot.appendChild(el(`<button class="nav__link" id="btn-logout">Keluar</button>`));
   } else {
-    navSlot.appendChild(el(`<a class="nav__link" href="#/masuk">Masuk</a>`));
-    navSlot.appendChild(el(`<a class="btn btn-primary btn-sm" href="#/daftar">Daftar Pendonor</a>`));
+    navSlot.appendChild(el(`<a class="nav__link" href="${routeHref('/masuk')}" data-route="/masuk">Masuk</a>`));
+    navSlot.appendChild(el(`<a class="btn btn-primary btn-sm" href="${routeHref('/daftar')}" data-route="/daftar">Daftar Pendonor</a>`));
   }
   const logoutBtn = document.getElementById('btn-logout');
   if (logoutBtn) {
@@ -94,7 +115,7 @@ function renderNav() {
       try { await Api.logout(); } catch (_) { /* token mungkin sudah kedaluwarsa, tetap logout lokal */ }
       Auth.clearToken('pendonor');
       toast('Berhasil keluar.', 'success');
-      location.hash = '#/';
+      navigate('/');
     });
   }
 }
@@ -122,8 +143,8 @@ function viewHome() {
           <h1 style="font-size:2.6rem;line-height:1.05;margin-bottom:16px;">Ambil nomor antrian donor darah dari mana saja.</h1>
           <p style="font-size:1.05rem;max-width:480px;">Cari jadwal dan lokasi donor terdekat, isi kuesioner kesehatan pra-donor, lalu pantau posisi antrianmu secara langsung — tanpa perlu mengantre fisik dari awal.</p>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;">
-            <a href="#/jadwal" class="btn btn-primary">Cari Jadwal Donor</a>
-            <a href="#/daftar" class="btn btn-ghost">Daftar Sebagai Pendonor</a>
+            <a href="${routeHref('/jadwal')}" data-route="/jadwal" class="btn btn-primary">Cari Jadwal Donor</a>
+            <a href="${routeHref('/daftar')}" data-route="/daftar" class="btn btn-ghost">Daftar Sebagai Pendonor</a>
           </div>
         </div>
         <div class="ticket">
@@ -154,7 +175,7 @@ function viewHome() {
           <h2 style="font-size:1.3rem;">Bagaimana cara kerjanya</h2>
           <div class="stack" style="margin-top:14px;">
             ${[
-              ['1', 'Daftar / masuk', 'Buat akun dengan NIK, verifikasi OTP lewat WhatsApp/SMS.'],
+              ['1', 'Daftar / masuk', 'Buat akun dengan NIK, verifikasi OTP lewat email.'],
               ['2', 'Cari jadwal & lokasi', 'Pilih lokasi UDD tetap atau unit donor bergerak terdekat.'],
               ['3', 'Isi kuesioner kesehatan', 'Self-assessment singkat sebelum mengambil nomor antrian.'],
               ['4', 'Pantau antrian real-time', 'Lihat posisi antrianmu dan dapat notifikasi saat giliran mendekati.'],
@@ -194,8 +215,8 @@ async function viewJadwal() {
             <input class="input" type="date" id="f-tanggal" name="tanggal">
           </div>
           <div class="field" style="margin-bottom:0;">
-            <label for="f-id-lokasi">ID Lokasi <span class="muted">(opsional)</span></label>
-            <input class="input" type="number" id="f-id-lokasi" name="id_lokasi" placeholder="mis. 1">
+            <label for="f-nama-lokasi">Nama Lokasi <span class="muted">(opsional)</span></label>
+            <input class="input" id="f-nama-lokasi" name="nama_lokasi" placeholder="mis. UDD PMI Jember">
           </div>
           <div class="field" style="margin-bottom:0;grid-column:1/-1;">
             <button class="btn btn-primary" type="submit" id="btn-cari">Cari Jadwal</button>
@@ -221,7 +242,7 @@ async function viewJadwal() {
 
   function renderJadwalList(list) {
     if (!list || list.length === 0) {
-      hasil.innerHTML = `<div class="empty">Tidak ada jadwal yang cocok. Coba ubah tanggal atau ID lokasi.</div>`;
+      hasil.innerHTML = `<div class="empty">Tidak ada jadwal yang cocok. Coba ubah tanggal atau nama lokasi.</div>`;
       return;
     }
     hasil.innerHTML = '';
@@ -254,7 +275,7 @@ async function viewJadwal() {
     e.preventDefault();
     loadJadwal({
       tanggal: document.getElementById('f-tanggal').value,
-      id_lokasi: document.getElementById('f-id-lokasi').value,
+      nama_lokasi: document.getElementById('f-nama-lokasi').value,
     });
   });
 
@@ -334,7 +355,7 @@ function viewDaftar() {
     <div class="shell shell--narrow" style="padding:44px 24px 60px;">
       <p class="eyebrow">Langkah 1 dari 2</p>
       <h1 style="font-size:1.8rem;">Daftar Sebagai Pendonor</h1>
-      <p>Data ini dipakai untuk verifikasi identitas &amp; kelayakan dasar sesuai SPO PMI. Setelah daftar, kode OTP akan dikirim ke WhatsApp/SMS kamu.</p>
+      <p>Data ini dipakai untuk verifikasi identitas &amp; kelayakan dasar sesuai SPO PMI. Setelah daftar, kode OTP akan dikirim ke email kamu.</p>
       <div class="card" style="margin-top:18px;">
         <div id="alert-slot"></div>
         <form id="form-daftar">
@@ -363,7 +384,7 @@ function viewDaftar() {
           </div>
           <div class="field-row">
             <div class="field">
-              <label for="r-telp">No. Telepon (WhatsApp)</label>
+              <label for="r-telp">No. Telepon</label>
               <input class="input" id="r-telp" required minlength="9" maxlength="20" placeholder="08xxxxxxxxxx">
             </div>
             <div class="field">
@@ -378,7 +399,7 @@ function viewDaftar() {
           </div>
           <button class="btn btn-primary btn-block" type="submit" id="btn-daftar">Daftar &amp; Kirim OTP</button>
         </form>
-        <p class="muted" style="text-align:center;margin-top:16px;">Sudah punya akun? <a href="#/masuk">Masuk di sini</a></p>
+        <p class="muted" style="text-align:center;margin-top:16px;">Sudah punya akun? <a href="${routeHref('/masuk')}" data-route="/masuk">Masuk di sini</a></p>
       </div>
     </div>
   `;
@@ -413,7 +434,7 @@ function viewDaftar() {
       if (res.data && res.data.otp_code_DEV_ONLY) {
         toast('Mode uji: kode OTP kamu adalah ' + res.data.otp_code_DEV_ONLY, 'info');
       }
-      location.hash = '#/verifikasi-otp';
+      navigate('/verifikasi-otp');
     } catch (err) {
       alertSlot.innerHTML = renderAlertError(err);
     } finally {
@@ -442,7 +463,7 @@ function viewVerifikasiOtp() {
     <div class="shell shell--narrow" style="padding:44px 24px 60px;">
       <p class="eyebrow">Langkah 2 dari 2</p>
       <h1 style="font-size:1.8rem;">Verifikasi Kode OTP</h1>
-      <p>Masukkan 6 digit kode yang dikirim lewat WhatsApp/SMS ke nomor yang kamu daftarkan.</p>
+      <p>Masukkan 6 digit kode yang dikirim lewat email ke alamat yang kamu daftarkan.</p>
       <div class="card" style="margin-top:18px;">
         <div id="alert-slot"></div>
         <form id="form-otp">
@@ -462,6 +483,26 @@ function viewVerifikasiOtp() {
   `;
 
   const alertSlot = document.getElementById('alert-slot');
+  const resendBtn = document.getElementById('btn-resend');
+  const RESEND_COOLDOWN_SECONDS = 60;
+  let resendTimer = null;
+
+  function startResendCooldown(seconds) {
+    clearInterval(resendTimer);
+    let sisa = seconds;
+    resendBtn.disabled = true;
+    resendBtn.textContent = `Kirim ulang (${sisa}d)`;
+    resendTimer = setInterval(() => {
+      sisa -= 1;
+      if (sisa <= 0) {
+        clearInterval(resendTimer);
+        resendBtn.disabled = false;
+        resendBtn.textContent = 'Kirim ulang';
+      } else {
+        resendBtn.textContent = `Kirim ulang (${sisa}d)`;
+      }
+    }, 1000);
+  }
 
   document.getElementById('form-otp').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -471,7 +512,7 @@ function viewVerifikasiOtp() {
     try {
       await Api.verifyOtp({ email: val('o-email'), otp: val('o-kode') });
       toast('Akun berhasil diverifikasi. Silakan masuk.', 'success');
-      location.hash = '#/masuk';
+      navigate('/masuk');
     } catch (err) {
       alertSlot.innerHTML = renderAlertError(err);
     } finally {
@@ -479,17 +520,27 @@ function viewVerifikasiOtp() {
     }
   });
 
-  document.getElementById('btn-resend').addEventListener('click', async () => {
+  resendBtn.addEventListener('click', async () => {
     const email2 = val('o-email');
     if (!email2) { toast('Isi email dulu.', 'error'); return; }
     try {
       const res = await Api.resendOtp({ email: email2 });
       toast('Kode OTP baru sudah dikirim.', 'success');
       if (res.data && res.data.otp_code_DEV_ONLY) toast('Mode uji: kode OTP = ' + res.data.otp_code_DEV_ONLY, 'info');
+      startResendCooldown(RESEND_COOLDOWN_SECONDS);
     } catch (err) {
       toast(err.message, 'error');
+      // Kalau backend nolak karena cooldown masih jalan (mis. setelah refresh
+      // halaman ini), sinkronkan hitung mundur dari pesan errornya supaya
+      // tombol tidak "nganggur" kelihatan aktif padahal masih akan ditolak.
+      const cocok = /tunggu (\d+) detik/i.exec(err.message || '');
+      if (cocok) startResendCooldown(parseInt(cocok[1], 10));
     }
   });
+
+  // Registrasi baru saja mengirim OTP pertama, jadi cooldown resend juga
+  // langsung berlaku begitu halaman ini dibuka.
+  startResendCooldown(RESEND_COOLDOWN_SECONDS);
 }
 
 /* ============================================================
@@ -513,8 +564,8 @@ function viewMasuk() {
           </div>
           <button class="btn btn-primary btn-block" type="submit" id="btn-masuk">Masuk</button>
         </form>
-        <p class="muted" style="text-align:center;margin-top:14px;"><a href="#/lupa-password">Lupa kata sandi?</a></p>
-        <p class="muted" style="text-align:center;margin-top:6px;">Belum punya akun? <a href="#/daftar">Daftar di sini</a></p>
+        <p class="muted" style="text-align:center;margin-top:14px;"><a href="${routeHref('/lupa-password')}" data-route="/lupa-password">Lupa kata sandi?</a></p>
+        <p class="muted" style="text-align:center;margin-top:6px;">Belum punya akun? <a href="${routeHref('/daftar')}" data-route="/daftar">Daftar di sini</a></p>
       </div>
     </div>
   `;
@@ -530,7 +581,7 @@ function viewMasuk() {
       Auth.setToken(res.data.token, 'pendonor');
       toast(`Selamat datang, ${res.data.nama}!`, 'success');
       renderNav();
-      location.hash = '#/dashboard';
+      navigate('/dashboard');
     } catch (err) {
       alertSlot.innerHTML = renderAlertError(err);
     } finally {
@@ -547,7 +598,7 @@ function viewLupaPassword() {
     <div class="shell shell--narrow" style="padding:56px 24px 60px;">
       <p class="eyebrow">Pemulihan akun</p>
       <h1 style="font-size:1.8rem;">Lupa Kata Sandi</h1>
-      <p>Masukkan email akunmu. Jika terdaftar, instruksi reset akan dikirim.</p>
+      <p>Masukkan email akunmu. Jika terdaftar, link atur ulang kata sandi akan dikirim ke email tersebut.</p>
       <div class="card" style="margin-top:18px;">
         <div id="alert-slot"></div>
         <form id="form-lupa">
@@ -582,18 +633,20 @@ function viewLupaPassword() {
 }
 
 function viewResetPassword() {
+  const tokenDariLink = new URLSearchParams(location.search).get('token') || '';
   const devToken = sessionStorage.getItem('reset_token_dev') || '';
+  const tokenAwal = tokenDariLink || devToken;
   app.innerHTML = `
     <div class="shell shell--narrow" style="padding:56px 24px 60px;">
       <p class="eyebrow">Pemulihan akun</p>
       <h1 style="font-size:1.8rem;">Atur Ulang Kata Sandi</h1>
-      <p>Tempelkan token reset yang kamu terima, lalu buat kata sandi baru.</p>
+      <p>${tokenDariLink ? 'Buat kata sandi baru untuk akunmu.' : 'Tempelkan token reset yang kamu terima lewat email, lalu buat kata sandi baru.'}</p>
       <div class="card" style="margin-top:18px;">
         <div id="alert-slot"></div>
         <form id="form-reset">
-          <div class="field">
+          <div class="field" style="${tokenDariLink ? 'display:none;' : ''}">
             <label for="rp-token">Token Reset</label>
-            <input class="input mono" id="rp-token" required value="${escapeHtml(devToken)}">
+            <input class="input mono" id="rp-token" required value="${escapeHtml(tokenAwal)}">
           </div>
           <div class="field">
             <label for="rp-pass">Kata Sandi Baru</label>
@@ -614,7 +667,7 @@ function viewResetPassword() {
       await Api.resetPassword({ token: val('rp-token'), password_baru: val('rp-pass') });
       toast('Kata sandi berhasil diganti, silakan masuk kembali.', 'success');
       sessionStorage.removeItem('reset_token_dev');
-      location.hash = '#/masuk';
+      navigate('/masuk');
     } catch (err) {
       alertSlot.innerHTML = renderAlertError(err);
     } finally {
@@ -649,8 +702,8 @@ async function viewDashboard() {
           <div><span class="muted">Status akun</span><br><span class="badge ${statusBadgeClass(akun.status_akun)}"><i class="badge-dot"></i>${escapeHtml(akun.status_akun)}</span></div>
         </div>
         <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">
-          <a class="btn btn-quiet btn-sm" href="#/profil">Lengkapi / Ubah Profil</a>
-          <a class="btn btn-ghost btn-sm" href="#/perangkat">Kelola Perangkat</a>
+          <a class="btn btn-quiet btn-sm" href="${routeHref('/profil')}" data-route="/profil">Lengkapi / Ubah Profil</a>
+          <a class="btn btn-ghost btn-sm" href="${routeHref('/perangkat')}" data-route="/perangkat">Kelola Perangkat</a>
         </div>
       </div>
       <div class="card">
@@ -661,8 +714,8 @@ async function viewDashboard() {
               <span class="badge ${statusBadgeClass(riwayat_kesehatan.hasil_screening_awal)}"><i class="badge-dot"></i>${riwayat_kesehatan.hasil_screening_awal === 'lolos_screening_awal' ? 'Lolos self-assessment' : 'Perlu pemeriksaan lanjutan'}</span></p>`
           : `<p style="margin-top:8px;">Kamu belum mengisi kuesioner kesehatan pra-donor.</p>`}
         <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
-          <a class="btn btn-primary btn-sm" href="#/kuesioner">Isi / Perbarui Kuesioner</a>
-          <a class="btn btn-ghost btn-sm" href="#/kartu-donor">Lihat Kartu Donor Digital</a>
+          <a class="btn btn-primary btn-sm" href="${routeHref('/kuesioner')}" data-route="/kuesioner">Isi / Perbarui Kuesioner</a>
+          <a class="btn btn-ghost btn-sm" href="${routeHref('/kartu-donor')}" data-route="/kartu-donor">Lihat Kartu Donor Digital</a>
         </div>
       </div>
     `;
@@ -935,15 +988,22 @@ const routes = {
 };
 
 function router() {
-  const hash = location.hash.replace(/^#/, '') || '/';
-  const view = routes[hash] || viewHome;
+  const path = currentPath();
+  const view = routes[path] || viewHome;
   window.scrollTo(0, 0);
   renderNav();
   document.querySelectorAll('.nav__link').forEach((l) => {
-    l.classList.toggle('is-active', l.getAttribute('href') === '#' + hash);
+    l.classList.toggle('is-active', l.dataset.route === path);
   });
   view();
 }
 
-window.addEventListener('hashchange', router);
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('a[data-route]');
+  if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  e.preventDefault();
+  navigate(a.dataset.route);
+});
+
+window.addEventListener('popstate', router);
 window.addEventListener('DOMContentLoaded', router);
