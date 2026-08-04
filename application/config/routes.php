@@ -74,7 +74,6 @@ $route['auth/sessions']['get']        = 'auth/sessions';
 $route['auth/logout']['post']         = 'auth/logout';
 $route['auth/logout-others']['post']  = 'auth/logout_others';
 
-<<<<<<< Updated upstream
 // FR-3.1 + FR-3.3: Cari Jadwal Donor & Info Kuota Tersedia (publik, tanpa login)
 $route['jadwal/cari']['get'] = 'jadwal/cari';
 
@@ -82,11 +81,10 @@ $route['jadwal/cari']['get'] = 'jadwal/cari';
 // (admin/jadwal/index, admin/jadwal/detail/:id, admin/jadwal/create,
 // admin/jadwal/update/:id, admin/jadwal/delete/:id), sama seperti pola
 // admin/Lokasi.php yang juga tidak butuh entry eksplisit di sini.
-=======
+
 // Modul 4.2: Profil Pendonor dan Kesehatan (FR-2.1, FR-2.2, FR-2.3)
 $route['profil']['get']             = 'profil/index';
 $route['profil']['put']             = 'profil/update';
 $route['profil/kuesioner']['get']   = 'profil/kuesioner_form';
 $route['profil/kuesioner']['post']  = 'profil/kuesioner_submit';
 $route['profil/kartu-donor']['get'] = 'profil/kartu_donor';
->>>>>>> Stashed changes
