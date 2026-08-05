@@ -1,7 +1,7 @@
 import { app } from '../elements.js';
 import { escapeHtml } from '../../../js/shared/dom.js';
 import { Api } from '../../../js/api.js';
-import { statusBadgeClass, labelStatusAntrian } from '../format.js';
+import { statusBadgeClass, labelStatusAntrian } from '../../../js/shared/format.js';
 import { pageHeader } from '../ui.js';
 import { routeHref } from '../router.js';
 import { requireAuth } from '../guards.js';

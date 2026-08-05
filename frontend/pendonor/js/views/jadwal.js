@@ -1,7 +1,7 @@
 import { app } from '../elements.js';
 import { el, escapeHtml, setLoading, toast } from '../../../js/shared/dom.js';
 import { Auth, Api } from '../../../js/api.js';
-import { fmtTanggal } from '../format.js';
+import { fmtTanggal } from '../../../js/shared/format.js';
 import { pageHeader } from '../ui.js';
 import { routeHref, navigate } from '../router.js';
 

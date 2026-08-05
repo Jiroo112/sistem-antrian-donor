@@ -3,26 +3,18 @@ RewriteEngine On
 RewriteCond %{HTTP:Authorization} .
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-# Backend REST API (CodeIgniter), selalu dipanggil lewat prefix /api/
-# supaya tidak tabrakan dengan rute halaman SPA (mis. /profil).
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^api/(.*)$ index.php?/$1 [L,QSA]
-
-# Sajikan UI pendonor & panel admin dari folder frontend/ tanpa menampilkan
-# struktur foldernya di URL untuk kedua entry point-nya (root & admin.html).
-# Aset (CSS, JS module, dsb) TIDAK di-alias -- index.html/admin.html
-# mereferensikannya lewat path relatif langsung ke lokasi fisiknya
-# (mis. "frontend/pendonor/js/main.js"), yang otomatis valid karena semua
-# rute bersih SPA cuma satu segmen (/jadwal, /dashboard, dst) sehingga
-# resolusi relatif selalu jatuh balik ke root situs ini.
-RewriteRule ^$ frontend/pendonor/index.html [L]
-RewriteRule ^admin\.html$ frontend/internal/admin.html [L]
+# Papan antrian digital (FR-5.4): satu halaman statis tunggal yang tidak
+# pernah bertingkat (selalu persis /papan-antrian.html), jadi aman
+# disajikan langsung sebagai file tanpa lewat CodeIgniter.
 RewriteRule ^papan-antrian\.html$ frontend/papan-antrian/index.html [L]
 
-# SPA Pendonor: semua rute lain yang bukan file/direktori nyata (mis.
-# /jadwal, /dashboard) diarahkan ke index.html supaya URL tanpa "#"
-# tetap berfungsi saat direfresh atau dibuka di tab baru.
+# Semua request lain yang bukan file/direktori asli (aset CSS/JS tetap
+# disajikan langsung sebagai file statis oleh Apache, tidak lewat baris ini)
+# diteruskan ke CodeIgniter. routes.php yang menentukan controller mana yang
+# menangani: REST API lewat prefix /api/*, panel internal lewat /admin*,
+# selebihnya halaman pendonor -- lihat komentar di routes.php. CI3
+# ($config['uri_protocol'] = 'REQUEST_URI') membaca URL asli dari server,
+# jadi tidak masalah target rewrite di bawah ini tidak membawa path apa pun.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ frontend/pendonor/index.html [L]
+RewriteRule ^ index.php [L]

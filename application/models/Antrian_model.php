@@ -182,6 +182,50 @@ class Antrian_model extends CI_Model {
         return $this->db->update($this->table, array('status' => 'dibatalkan'));
     }
 
+    // ============================================================
+    // Modul Manajemen Antrian -- Petugas/Admin (FR-7.2, FR-7.3)
+    // ============================================================
+
+    public function get_by_qr_code($qr_code)
+    {
+        return $this->db->get_where($this->table, array('qr_code' => $qr_code))->row();
+    }
+
+    // FR-7.2 "panggil berikutnya": nomor menunggu dengan nomor_urut terkecil
+    // di jadwal tsb -- inilah yang otomatis dipanggil kalau petugas tidak
+    // memilih nomor tertentu secara manual.
+    public function get_next_menunggu($id_jadwal)
+    {
+        $this->db->where('id_jadwal', $id_jadwal);
+        $this->db->where('status', 'menunggu');
+        $this->db->order_by('nomor_urut', 'ASC');
+        $this->db->limit(1);
+        return $this->db->get($this->table)->row();
+    }
+
+    // Daftar antrian satu jadwal buat panel petugas -- ikut join nama &
+    // golongan darah pendonor (beda dari papan antrian publik FR-5.4 yang
+    // sengaja menyembunyikan data pribadi) karena petugas loket memang perlu
+    // tahu siapa yang sedang mereka panggil/verifikasi.
+    public function get_for_petugas($id_jadwal)
+    {
+        $this->db->select('antrian.*, pendonor.nama, pendonor.golongan_darah');
+        $this->db->from($this->table);
+        $this->db->join('pendonor', 'pendonor.id_pendonor = antrian.id_pendonor');
+        $this->db->where('antrian.id_jadwal', $id_jadwal);
+        $this->db->order_by('antrian.nomor_urut', 'ASC');
+        return $this->db->get()->result();
+    }
+
+    // Setter status generik dipakai bareng oleh panggil/lewati/checkin/selesai
+    // -- $extra buat kolom timestamp terkait (waktu_checkin, waktu_selesai).
+    public function set_status($id_antrian, $status, array $extra = array())
+    {
+        $data = array_merge(array('status' => $status), $extra);
+        $this->db->where('id_antrian', $id_antrian);
+        return $this->db->update($this->table, $data);
+    }
+
     /**
      * FR-4.4: pindahkan antrian yang sama ke jadwal lain. Nomor urut & QR
      * code diterbitkan ulang karena keduanya terikat ke slot/jadwal

@@ -3,9 +3,21 @@ import { toast, setLoading, renderAlertError } from '../../../js/shared/dom.js';
 import { Auth, Api } from '../../../js/api.js';
 import { renderNav } from '../nav.js';
 import { setCurrentUser } from '../session.js';
+import { defaultRouteFor } from '../permissions.js';
+import { navigate, BASE_PATH } from '../router.js';
 
 /* Login internal (Petugas Loket / Admin UDD / Super Admin) */
 export function viewMasuk() {
+  // BASE_PATH selalu berakhiran "/admin" (lihat router.js), jadi root situs
+  // pendonor didapat dengan membuang akhiran itu -- dipakai buat tautan
+  // "Ke situs pendonor" di bawah. Sengaja dihitung DI DALAM fungsi (bukan
+  // di top-level modul) supaya tidak diakses lebih awal dari router.js
+  // sempat menetapkan nilainya -- router.js meng-import viewMasuk (buat
+  // tabel rute) SEBELUM baris `export const BASE_PATH = ...` di router.js
+  // sendiri sempat jalan, jadi akses di top-level modul ini akan kena TDZ
+  // ("Cannot access 'BASE_PATH' before initialization").
+  const pendonorRoot = BASE_PATH.replace(/\/admin$/, '') || '/';
+
   app.innerHTML = `
     <div class="shell shell--narrow" style="padding:64px 24px 60px;">
       <p class="eyebrow">Panel Internal PMI / UDD</p>
@@ -25,7 +37,7 @@ export function viewMasuk() {
           <button class="btn btn-primary btn-block" type="submit" id="btn-masuk">Masuk</button>
         </form>
       </div>
-      <p class="muted" style="text-align:center;margin-top:18px;">Kamu pendonor? <a href="index.html">Ke situs pendonor →</a></p>
+      <p class="muted" style="text-align:center;margin-top:18px;">Kamu pendonor? <a href="${pendonorRoot}/">Ke situs pendonor →</a></p>
     </div>
   `;
   const alertSlot = document.getElementById('alert-slot');
@@ -43,7 +55,7 @@ export function viewMasuk() {
       setCurrentUser(res.data);
       toast(`Selamat datang, ${res.data.nama}!`, 'success');
       renderNav();
-      location.hash = '#/jadwal';
+      navigate(defaultRouteFor(res.data.peran));
     } catch (err) {
       alertSlot.innerHTML = renderAlertError(err);
     } finally {

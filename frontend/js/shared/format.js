@@ -1,4 +1,6 @@
-// Helper format tanggal & status khusus tampilan pendonor.
+// format.js — helper format tanggal & status antrian yang identik dipakai
+// pendonor (frontend/pendonor/) dan panel internal (frontend/internal/),
+// karena keduanya menampilkan data tabel `antrian` yang sama.
 
 export function fmtTanggal(iso) {
   if (!iso) return '-';

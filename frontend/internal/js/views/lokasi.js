@@ -2,11 +2,11 @@ import { app } from '../elements.js';
 import { el, escapeHtml, setLoading, toast, renderAlertError } from '../../../js/shared/dom.js';
 import { Api } from '../../../js/api.js';
 import { pageHeader } from '../ui.js';
-import { requireAuth } from '../guards.js';
+import { requireRole } from '../guards.js';
 
 /* FR-7.4: Kelola Lokasi Donor */
 export async function viewLokasi() {
-  if (!requireAuth()) return;
+  if (!requireRole('/lokasi')) return;
   app.innerHTML = `
     ${pageHeader('Manajemen lokasi', 'Kelola Lokasi Donor', 'Tambah atau ubah data lokasi UDD tetap maupun unit donor bergerak beserta titik koordinat.')}
     <div class="shell" style="padding:16px 24px 60px;">

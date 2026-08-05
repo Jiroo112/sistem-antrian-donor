@@ -1,7 +1,7 @@
 import { app } from '../elements.js';
 import { el, escapeHtml, setLoading, toast } from '../../../js/shared/dom.js';
 import { Api } from '../../../js/api.js';
-import { fmtTanggal, fmtTanggalWaktu, statusBadgeClass, labelStatusAntrian } from '../format.js';
+import { fmtTanggal, fmtTanggalWaktu, statusBadgeClass, labelStatusAntrian } from '../../../js/shared/format.js';
 import { renderQrCode } from '../qr.js';
 import { pageHeader } from '../ui.js';
 import { routeHref } from '../router.js';

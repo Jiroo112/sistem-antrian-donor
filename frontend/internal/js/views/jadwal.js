@@ -2,11 +2,11 @@ import { app } from '../elements.js';
 import { el, escapeHtml, setLoading, toast, renderAlertError } from '../../../js/shared/dom.js';
 import { Api } from '../../../js/api.js';
 import { pageHeader } from '../ui.js';
-import { requireAuth } from '../guards.js';
+import { requireRole } from '../guards.js';
 
 /* FR-7.1: Kelola Jadwal & Kuota Donor */
 export async function viewJadwal() {
-  if (!requireAuth()) return;
+  if (!requireRole('/jadwal')) return;
   app.innerHTML = `
     ${pageHeader('Manajemen jadwal', 'Kelola Jadwal & Kuota Donor', 'Buat, ubah, atau batalkan jadwal kegiatan donor darah beserta kuota per slot waktu.')}
     <div class="shell" style="padding:16px 24px 60px;">
@@ -49,7 +49,6 @@ export async function viewJadwal() {
           <td>${j.kuota_tersisa ?? '-'} / ${j.kuota_total}</td>
           <td><span class="badge ${j.status === 'aktif' || !j.status ? 'badge--aktif' : 'badge--nonaktif'}"><i class="badge-dot"></i>${escapeHtml(j.status || 'aktif')}</span></td>
           <td style="white-space:nowrap;">
-            <a class="btn btn-quiet btn-sm" href="papan-antrian.html?id_jadwal=${j.id_jadwal}" target="_blank" rel="noopener">Papan Antrian ↗</a>
             <button class="btn btn-ghost btn-sm" data-edit="${j.id_jadwal}">Ubah</button>
             <button class="btn btn-danger btn-sm" data-hapus="${j.id_jadwal}">Batalkan</button>
           </td>

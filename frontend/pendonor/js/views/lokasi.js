@@ -41,13 +41,13 @@ export async function viewLokasi() {
         ? `https://www.google.com/maps?q=${lok.latitude},${lok.longitude}`
         : null;
       hasil.appendChild(el(`
-        <div class="card" style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-          <div>
+        <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+          <div style="flex:1 1 260px;min-width:0;">
             <span class="badge ${lok.jenis === 'mobile_unit' ? 'badge--info' : 'badge--aktif'}">${lok.jenis === 'mobile_unit' ? 'Unit Bergerak' : 'UDD Tetap'}</span>
             <h3 style="font-size:1.1rem;margin:8px 0 4px;">${escapeHtml(lok.nama_lokasi)}</h3>
             <p class="muted" style="margin:0;">${escapeHtml(lok.alamat || '')}</p>
           </div>
-          <div style="display:flex;align-items:center;">
+          <div style="flex-shrink:0;">
             ${mapsUrl ? `<a class="btn btn-ghost btn-sm" href="${mapsUrl}" target="_blank" rel="noopener">Buka di Peta ↗</a>` : `<span class="muted">Koordinat belum tersedia</span>`}
           </div>
         </div>

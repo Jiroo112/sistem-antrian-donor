@@ -49,7 +49,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | Examples:	my-controller/index	-> my_controller/index
 |		my-controller/my-method	-> my_controller/my_method
 */
-$route['default_controller'] = 'welcome';
+$route['default_controller'] = 'pendonor/index';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 
@@ -82,10 +82,6 @@ $route['api/jadwal/cari']['get'] = 'jadwal/cari';
 // FR-3.2: Peta Lokasi Donor -- publik, tanpa login
 $route['api/lokasi/peta']['get'] = 'lokasi/peta';
 
-// FR-7.1: Kelola Jadwal & Kuota (admin) -- pakai default routing CI3
-// (admin/jadwal/index, admin/jadwal/detail/:id, admin/jadwal/create,
-// admin/jadwal/update/:id, admin/jadwal/delete/:id), sama seperti pola
-// admin/Lokasi.php yang juga tidak butuh entry eksplisit di sini.
 
 // Modul 4.2: Profil Pendonor dan Kesehatan (FR-2.1, FR-2.2, FR-2.3)
 $route['api/profil']['get']             = 'profil/index';
@@ -111,3 +107,30 @@ $route['api/papan-antrian']['get'] = 'papan/antrian';
 // admin/lokasi/* yang pakai default routing CI3 di atas) diteruskan apa
 // adanya setelah prefix "api/" dibuang.
 $route['api/(.+)'] = '$1';
+
+/*
+| -------------------------------------------------------------------------
+| SHELL HTML FRONTEND -- Pendonor & Panel Internal
+| -------------------------------------------------------------------------
+| Dua baris di bawah ini HARUS tetap di bawah semua rute "api/..." di atas
+| (CI3 mencocokkan rute sesuai urutan deklarasi, berhenti di kecocokan
+| pertama) -- kalau ditaruh lebih atas, pola tangkap-semua "(.+)" bakal
+| "mencuri" request api/* sebelum sempat dicocokkan ke rute yang benar.
+|
+| Panel internal (petugas/admin): semua /admin dan /admin/... disajikan
+| lewat satu view yang sama (base_url disuntik server, bukan ditebak
+| client) -- lihat Panel.php & application/views/admin_shell.php. Halaman
+| mana yang benar-benar tampil ditentukan client-side oleh
+| frontend/internal/js/router.js berdasarkan URL saat itu.
+*/
+$route['admin']       = 'panel/index';
+$route['admin/(.*)']  = 'panel/index/$1';
+$route['admin\.html'] = 'panel/index'; // alias URL lama, biar link/bookmark lama tidak putus (kunci rute CI3 adalah regex, titik di-escape)
+
+/*
+| SPA Pendonor: rute bersih apa pun yang tidak cocok pola di atas (mis.
+| /jadwal, /dashboard, /profil) jatuh ke sini -- sama seperti panel
+| internal, satu view yang sama untuk semua, base_url disuntik server
+| lewat Pendonor.php & application/views/pendonor_shell.php.
+*/
+$route['(.+)'] = 'pendonor/index/$1';

@@ -135,4 +135,11 @@ export const Api = {
   adminLokasiCreate: (data) => apiCall('admin/lokasi/create', { method: 'POST', body: data, auth: 'internal' }),
   adminLokasiUpdate: (id, data) => apiCall(`admin/lokasi/update/${id}`, { method: 'POST', body: data, auth: 'internal' }),
   adminLokasiDelete: (id) => apiCall(`admin/lokasi/delete/${id}`, { method: 'POST', auth: 'internal' }),
+
+  // ---- Admin: Manajemen Antrian / Petugas Loket (FR-7.2, FR-7.3) ----
+  adminAntrianList: (id_jadwal) => apiCall('admin/antrian', { method: 'GET', query: { id_jadwal }, auth: 'internal' }),
+  adminAntrianPanggil: (payload) => apiCall('admin/antrian/panggil', { method: 'POST', body: payload, auth: 'internal' }),
+  adminAntrianLewati: (id_antrian) => apiCall(`admin/antrian/lewati/${id_antrian}`, { method: 'POST', auth: 'internal' }),
+  adminAntrianCheckin: (payload) => apiCall('admin/antrian/checkin', { method: 'POST', body: payload, auth: 'internal' }),
+  adminAntrianSelesai: (id_antrian) => apiCall(`admin/antrian/selesai/${id_antrian}`, { method: 'POST', auth: 'internal' }),
 };

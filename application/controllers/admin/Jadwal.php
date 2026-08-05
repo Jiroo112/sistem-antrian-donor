@@ -9,7 +9,12 @@ class Jadwal extends MY_Controller {
     {
         parent::__construct();
         $this->verify_token();
-        $this->verify_role(['admin_udd', 'super_admin']);
+        // Baca (index/detail) dibuka untuk semua peran internal termasuk
+        // petugas_loket -- Modul Manajemen Antrian (FR-7.2/7.3, lihat
+        // admin/Antrian.php) butuh daftar jadwal buat dropdown pemilihan.
+        // Tulis (create/update/delete) tetap dibatasi admin_udd/super_admin
+        // saja, dicek ulang di masing-masing method di bawah.
+        $this->verify_role(['petugas_loket', 'admin_udd', 'super_admin']);
         $this->load->model('Jadwal_model');
         $this->load->model('Lokasi_model');
     }
@@ -51,6 +56,7 @@ class Jadwal extends MY_Controller {
 
     public function create()
     {
+        $this->verify_role(['admin_udd', 'super_admin']);
         $this->get_json_input();
 
         $id_lokasi   = $this->input->post('id_lokasi');
@@ -100,6 +106,7 @@ class Jadwal extends MY_Controller {
 
     public function update($id_jadwal)
     {
+        $this->verify_role(['admin_udd', 'super_admin']);
         $this->get_json_input();
 
         $jadwal = $this->Jadwal_model->get_by_id($id_jadwal);
@@ -141,6 +148,7 @@ class Jadwal extends MY_Controller {
 
     public function delete($id_jadwal)
     {
+        $this->verify_role(['admin_udd', 'super_admin']);
         $jadwal = $this->Jadwal_model->get_by_id($id_jadwal);
         if (!$jadwal) {
             json_response(404, 'error', 'Jadwal tidak ditemukan');

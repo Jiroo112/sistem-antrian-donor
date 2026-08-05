@@ -9,7 +9,12 @@ class Lokasi extends MY_Controller {
     {
         parent::__construct();
         $this->verify_token();
-        $this->verify_role(['admin_udd', 'super_admin']);
+        // Baca (index) dibuka untuk semua peran internal termasuk petugas_loket
+        // -- panel Kelola Jadwal (admin/Jadwal.php) butuh daftar lokasi buat
+        // dropdown, dan sekarang panel itu juga bisa diakses petugas_loket.
+        // Tulis (create/update/delete) tetap dibatasi admin_udd/super_admin
+        // saja, dicek ulang di masing-masing method di bawah.
+        $this->verify_role(['petugas_loket', 'admin_udd', 'super_admin']);
         $this->load->model('Lokasi_model');
     }
 
@@ -38,6 +43,7 @@ class Lokasi extends MY_Controller {
 
     public function create()
     {
+        $this->verify_role(['admin_udd', 'super_admin']);
         $this->get_json_input();
 
         $nama = $this->input->post('nama_lokasi');
@@ -64,6 +70,7 @@ class Lokasi extends MY_Controller {
 
     public function update($id_lokasi)
     {
+        $this->verify_role(['admin_udd', 'super_admin']);
         $this->get_json_input();
 
         $lokasi = $this->Lokasi_model->get_by_id($id_lokasi);
@@ -88,6 +95,7 @@ class Lokasi extends MY_Controller {
 
     public function delete($id_lokasi)
     {
+        $this->verify_role(['admin_udd', 'super_admin']);
         $lokasi = $this->Lokasi_model->get_by_id($id_lokasi);
         if (!$lokasi) {
             json_response(404, 'error', 'Lokasi tidak ditemukan');

@@ -1,7 +1,7 @@
 import { app } from '../elements.js';
 import { escapeHtml, toast } from '../../../js/shared/dom.js';
 import { Api } from '../../../js/api.js';
-import { fmtTanggalWaktu, statusBadgeClass } from '../format.js';
+import { fmtTanggalWaktu, statusBadgeClass } from '../../../js/shared/format.js';
 import { pageHeader } from '../ui.js';
 import { requireAuth } from '../guards.js';
 
