@@ -1,28 +1,26 @@
 /**
  * api.js — klien kecil untuk memanggil REST API "Sistem Antrian Online Donor Darah".
+ * Dipakai bersama oleh aplikasi pendonor (frontend/pendonor/) dan panel
+ * internal (frontend/internal/) lewat import ES module.
  *
- * Alamat API dideteksi otomatis dari lokasi file ini sendiri (origin + folder
- * dasar tempat proyek diakses, ditambah "/api"), jadi tidak perlu diisi manual.
- * Kalau backend ada di alamat lain, timpa lewat window.__API_BASE_URL__
- * SEBELUM tag <script src="js/api.js"> dimuat.
+ * Alamat API dideteksi otomatis dari lokasi file ini sendiri (import.meta.url),
+ * jadi tidak perlu diisi manual. Kalau backend ada di alamat lain, timpa lewat
+ * window.__API_BASE_URL__ SEBELUM modul ini pertama kali di-import.
  */
-function detectBasePath(scriptSuffix) {
-  const src = document.currentScript && document.currentScript.src;
-  if (!src) return '';
-  try {
-    const path = new URL(src).pathname;
-    return path.endsWith(scriptSuffix) ? path.slice(0, -scriptSuffix.length) : '';
-  } catch (_) {
-    return '';
-  }
+function computeApiBaseUrl() {
+  if (window.__API_BASE_URL__) return window.__API_BASE_URL__;
+  // import.meta.url = URL modul ini sendiri, mis. ".../frontend/js/api.js".
+  // "../../" naik dua level (js/ lalu frontend/) untuk sampai ke root situs.
+  const siteRoot = new URL('../../', import.meta.url);
+  return siteRoot.href.replace(/\/+$/, '') + '/api';
 }
 
-const API_BASE_URL = window.__API_BASE_URL__ || (location.origin + detectBasePath('/js/api.js') + '/api');
+const API_BASE_URL = computeApiBaseUrl();
 
 const TOKEN_KEY_PENDONOR = 'antrian_donor_token_pendonor';
 const TOKEN_KEY_INTERNAL = 'antrian_donor_token_internal';
 
-const Auth = {
+export const Auth = {
   getToken(kind = 'pendonor') {
     return sessionStorage.getItem(kind === 'internal' ? TOKEN_KEY_INTERNAL : TOKEN_KEY_PENDONOR);
   },
@@ -92,7 +90,7 @@ async function apiCall(path, { method = 'GET', body = null, auth = null, query =
   return json;
 }
 
-const Api = {
+export const Api = {
   // ---- Auth (FR-1.x) ----
   register: (data) => apiCall('auth/register', { method: 'POST', body: data }),
   verifyOtp: (data) => apiCall('auth/verify-otp', { method: 'POST', body: data }),
@@ -115,6 +113,16 @@ const Api = {
   getKuesioner: () => apiCall('profil/kuesioner', { method: 'GET', auth: 'pendonor' }),
   submitKuesioner: (jawaban) => apiCall('profil/kuesioner', { method: 'POST', body: { jawaban }, auth: 'pendonor' }),
   kartuDonor: () => apiCall('profil/kartu-donor', { method: 'GET', auth: 'pendonor' }),
+
+  // ---- Antrian (FR-4.x) ----
+  ambilAntrian: (id_jadwal) => apiCall('antrian', { method: 'POST', body: { id_jadwal }, auth: 'pendonor' }),
+  antrianSaya: () => apiCall('antrian/saya', { method: 'GET', auth: 'pendonor' }),
+  antrianDetail: (id) => apiCall(`antrian/${id}`, { method: 'GET', auth: 'pendonor' }),
+  batalkanAntrian: (id) => apiCall(`antrian/${id}/batalkan`, { method: 'PUT', auth: 'pendonor' }),
+  jadwalUlangAntrian: (id, id_jadwal_baru) => apiCall(`antrian/${id}/jadwal-ulang`, { method: 'PUT', body: { id_jadwal_baru }, auth: 'pendonor' }),
+
+  // ---- Tracking (FR-5.4, publik) ----
+  papanAntrian: (id_jadwal) => apiCall('papan-antrian', { method: 'GET', query: { id_jadwal } }),
 
   // ---- Admin: Jadwal (FR-7.1) ----
   adminJadwalList: (filter) => apiCall('admin/jadwal', { method: 'GET', query: filter, auth: 'internal' }),

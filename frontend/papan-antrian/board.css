@@ -1,0 +1,129 @@
+/* board.css — tema gelap kontras-tinggi untuk papan antrian digital (FR-5.4),
+   ditayangkan di layar/TV lokasi donor. Dipakai bareng css/style.css (untuk
+   variabel warna & font), jadi file ini cuma override layout + ukuran. */
+
+.board-body {
+  background: var(--ink);
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-x: hidden;
+}
+
+#board {
+  width: 100%;
+  max-width: 1100px;
+  padding: 40px 32px;
+  text-align: center;
+}
+
+.board__loading,
+.board__error {
+  font-size: 1.4rem;
+  color: #EDE6E1;
+}
+
+.board__header {
+  margin-bottom: 36px;
+}
+
+.board__lokasi {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 600;
+  margin: 0 0 6px;
+  color: #fff; /* style.css nyetel h1{color:var(--ink)} yang gelap -- ditimpa di sini karena papan ini bertema gelap */
+}
+
+.board__jadwal {
+  font-size: 1.1rem;
+  color: #C9BDB6;
+}
+
+.board__utama {
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: var(--radius-l);
+  padding: 48px 24px;
+  margin-bottom: 40px;
+}
+
+.board__utama-label {
+  font-size: 1.1rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #E9B9BE;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.board__utama-nomor {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: clamp(5rem, 18vw, 11rem);
+  line-height: 1;
+  color: #fff;
+}
+
+.board__utama-nomor--kosong {
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  color: #C9BDB6;
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+.board__menunggu-label {
+  font-size: 1rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #C9BDB6;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.board__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+}
+
+.board__chip {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.6rem;
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: var(--radius-m);
+  padding: 14px 22px;
+  min-width: 84px;
+}
+
+.board__grid-empty {
+  color: #C9BDB6;
+  font-size: 1.1rem;
+}
+
+.board__footer {
+  margin-top: 44px;
+  font-size: .85rem;
+  color: #9C8F89;
+}
+
+.board__footer .dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  margin-right: 6px;
+  vertical-align: middle;
+  animation: board-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes board-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}

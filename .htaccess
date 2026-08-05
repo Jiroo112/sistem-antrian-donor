@@ -9,16 +9,16 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^api/(.*)$ index.php?/$1 [L,QSA]
 
-# Sajikan UI pendonor & panel admin dari folder frontend/ tanpa
-# menampilkan struktur foldernya di URL. UI pendonor & internal dipisah
-# secara fisik di frontend/pendonor/ dan frontend/internal/, sedangkan
-# aset yang dipakai bersama (css/, js/api.js) tetap satu tempat.
+# Sajikan UI pendonor & panel admin dari folder frontend/ tanpa menampilkan
+# struktur foldernya di URL untuk kedua entry point-nya (root & admin.html).
+# Aset (CSS, JS module, dsb) TIDAK di-alias -- index.html/admin.html
+# mereferensikannya lewat path relatif langsung ke lokasi fisiknya
+# (mis. "frontend/pendonor/js/main.js"), yang otomatis valid karena semua
+# rute bersih SPA cuma satu segmen (/jadwal, /dashboard, dst) sehingga
+# resolusi relatif selalu jatuh balik ke root situs ini.
 RewriteRule ^$ frontend/pendonor/index.html [L]
 RewriteRule ^admin\.html$ frontend/internal/admin.html [L]
-RewriteRule ^css/(.+)$ frontend/css/$1 [L]
-RewriteRule ^js/app\.js$ frontend/pendonor/app.js [L]
-RewriteRule ^js/admin\.js$ frontend/internal/admin.js [L]
-RewriteRule ^js/(.+)$ frontend/js/$1 [L]
+RewriteRule ^papan-antrian\.html$ frontend/papan-antrian/index.html [L]
 
 # SPA Pendonor: semua rute lain yang bukan file/direktori nyata (mis.
 # /jadwal, /dashboard) diarahkan ke index.html supaya URL tanpa "#"

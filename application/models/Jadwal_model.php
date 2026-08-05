@@ -101,6 +101,18 @@ class Jadwal_model extends CI_Model {
         return $this->db->get_where($this->table, array('id_jadwal' => $id_jadwal))->row();
     }
 
+    // Sama seperti get_by_id(), tapi ikut JOIN nama_lokasi & alamat -- dipakai
+    // di Antrian.php buat nampilin e-ticket (FR-4.2) supaya pendonor lihat
+    // nama lokasi, bukan cuma id_lokasi mentah.
+    public function get_by_id_with_lokasi($id_jadwal)
+    {
+        $this->db->select('jadwal_donor.*, lokasi_donor.nama_lokasi, lokasi_donor.alamat');
+        $this->db->from($this->table);
+        $this->db->join('lokasi_donor', 'lokasi_donor.id_lokasi = jadwal_donor.id_lokasi');
+        $this->db->where('jadwal_donor.id_jadwal', $id_jadwal);
+        return $this->db->get()->row();
+    }
+
     // Dipakai buat cek bentrok sebelum create/update, karena ada UNIQUE KEY
     // (id_lokasi, tanggal, slot_waktu) di tabel -- kalau nggak dicek dulu,
     // pendonor/admin bakal lihat error MySQL mentah alih-alih pesan yang jelas.
@@ -150,5 +162,29 @@ class Jadwal_model extends CI_Model {
         // FK dari antrian ke jadwal_donor pakai ON DELETE RESTRICT, jadi
         // hard delete bakal ditolak MySQL sendiri kalau sudah ada antrian.
         return $this->db->update($this->table, array('status' => 'dibatalkan'), array('id_jadwal' => $id_jadwal));
+    }
+
+    // ============================================================
+    // FR-4.1 + BR6 (Modul Pendaftaran Antrian Online): kuota dikurangi/
+    // dikembalikan lewat UPDATE atomik (bukan read-modify-write PHP) supaya
+    // aman dari race condition dua request barengan -- kuota_tersisa tidak
+    // pernah lolos di bawah 0 (WHERE kuota_tersisa > 0) atau lampaui
+    // kuota_total (LEAST()) walau banyak pendonor mendaftar bersamaan.
+    // ============================================================
+
+    public function kurangi_kuota($id_jadwal)
+    {
+        $this->db->where('id_jadwal', $id_jadwal);
+        $this->db->where('kuota_tersisa >', 0);
+        $this->db->set('kuota_tersisa', 'kuota_tersisa - 1', FALSE);
+        $this->db->update($this->table);
+        return $this->db->affected_rows() === 1;
+    }
+
+    public function tambah_kuota($id_jadwal)
+    {
+        $this->db->where('id_jadwal', $id_jadwal);
+        $this->db->set('kuota_tersisa', 'LEAST(kuota_tersisa + 1, kuota_total)', FALSE);
+        return $this->db->update($this->table);
     }
 }

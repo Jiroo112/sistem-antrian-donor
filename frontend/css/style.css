@@ -126,12 +126,13 @@ button, input, select, textarea{ font-family:inherit; font-size:inherit; }
   border:1px solid var(--line);
   border-radius:var(--radius-l);
   box-shadow:var(--shadow-card);
-  display:grid;
-  grid-template-columns:1fr auto;
+  display:flex;
+  align-items:stretch;
   overflow:hidden;
 }
-.ticket__main{ padding:22px 24px; }
+.ticket__main{ padding:22px 24px; flex:1 1 auto; min-width:0; }
 .ticket__stub{
+  flex:0 0 132px;
   width:132px; background:var(--crimson);
   color:#fff; padding:22px 14px;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
@@ -139,6 +140,7 @@ button, input, select, textarea{ font-family:inherit; font-size:inherit; }
   position:relative;
 }
 .ticket__divider{
+  flex:0 0 auto;
   position:relative;
   width:0;
   border-left:2px dashed rgba(255,255,255,.55);
@@ -155,6 +157,26 @@ button, input, select, textarea{ font-family:inherit; font-size:inherit; }
 .ticket__meta span{ display:inline-flex; align-items:center; gap:5px; }
 .ticket__stub-label{ font-size:.62rem; text-transform:uppercase; letter-spacing:.08em; opacity:.85; }
 .ticket__stub-value{ font-family:var(--font-mono); font-weight:700; font-size:1.3rem; }
+
+.ticket__qr-row{ display:flex; align-items:center; gap:16px; margin-top:16px; }
+.ticket__qr-box{
+  flex:0 0 auto; width:104px; height:104px; padding:8px;
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius-s);
+  display:flex; align-items:center; justify-content:center;
+}
+.ticket__qr-box svg{ width:100%; height:100%; display:block; }
+.ticket__qr-caption{ font-size:.8rem; color:var(--slate); min-width:0; }
+.ticket__qr-caption .mono{ display:block; margin-top:6px; font-size:.72rem; word-break:break-all; color:var(--ink); opacity:.65; }
+
+@media (max-width:560px){
+  .ticket{ flex-direction:column; }
+  .ticket__stub{ flex-basis:auto; width:auto; flex-direction:row; padding:14px 22px; }
+  .ticket__divider{ width:auto; height:0; border-left:none; border-top:2px dashed rgba(168,31,53,.25); }
+  .ticket__stub::before, .ticket__stub::after{ left:auto; top:-9px; }
+  .ticket__stub::before{ left:-9px; }
+  .ticket__stub::after{ right:-9px; left:auto; }
+  .ticket__qr-row{ flex-direction:column; align-items:flex-start; }
+}
 
 /* ---------- form elements ---------- */
 .field{ margin-bottom:18px; }

@@ -94,6 +94,19 @@ $route['api/profil/kuesioner']['get']   = 'profil/kuesioner_form';
 $route['api/profil/kuesioner']['post']  = 'profil/kuesioner_submit';
 $route['api/profil/kartu-donor']['get'] = 'profil/kartu_donor';
 
+// Modul 4.4: Pendaftaran Antrian Online (FR-4.1 - FR-4.4)
+$route['api/antrian']['post']                    = 'antrian/ambil';
+$route['api/antrian/saya']['get']                = 'antrian/saya';
+$route['api/antrian/(:num)']['get']              = 'antrian/detail/$1';
+$route['api/antrian/(:num)/batalkan']['put']     = 'antrian/batalkan/$1';
+$route['api/antrian/(:num)/jadwal-ulang']['put'] = 'antrian/jadwal_ulang/$1';
+
+// Modul 4.5: Tracking Antrian Real-Time (FR-5.1 - FR-5.4)
+// FR-5.1/5.2/5.3 tidak butuh route terpisah -- sudah nempel di respons
+// api/antrian/saya & api/antrian/:id (field "posisi") lewat Antrian.php.
+// FR-5.4: papan antrian digital, publik tanpa login.
+$route['api/papan-antrian']['get'] = 'papan/antrian';
+
 // Fallback: rute lain di bawah prefix "api/" (mis. admin/jadwal/*,
 // admin/lokasi/* yang pakai default routing CI3 di atas) diteruskan apa
 // adanya setelah prefix "api/" dibuang.
