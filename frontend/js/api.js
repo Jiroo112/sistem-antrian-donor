@@ -91,7 +91,6 @@ async function apiCall(path, { method = 'GET', body = null, auth = null, query =
 }
 
 /**
-<<<<<<< Updated upstream
  * Unduh file biner (mis. PDF sertifikat, FR-8.2) yang butuh header
  * Authorization -- makanya tidak bisa dipakai lewat `<a href>` navigasi
  * biasa (token JWT tidak boleh disisipkan ke URL). fetch() manual di sini,
@@ -122,11 +121,17 @@ async function unduhBlob(path, fallbackFilename) {
   const blobUrl = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = blobUrl;
-=======
- * Unduh file (mis. CSV laporan) lewat fetch + Blob, bukan link <a href>
- * biasa -- endpointnya butuh header Authorization (JWT bearer), yang tidak
- * bisa disisipkan ke navigasi/link biasa. Nama file diambil dari header
- * Content-Disposition yang dikirim backend (lihat admin/Laporan::export()).
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(blobUrl);
+}
+
+/**
+ * Unduh file biner umum (mis. CSV laporan, FR-9.2) yang butuh query filter
+ * dan bisa dipakai lintas jenis auth (pendonor/internal) -- beda dari
+ * unduhBlob() yang khusus sertifikat pendonor tanpa query.
  */
 async function apiDownload(path, { query = null, auth = null } = {}) {
   let url = API_BASE_URL.replace(/\/$/, '') + '/' + path.replace(/^\//, '');
@@ -163,16 +168,11 @@ async function apiDownload(path, { query = null, auth = null } = {}) {
   const objectUrl = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = objectUrl;
->>>>>>> Stashed changes
   a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
-<<<<<<< Updated upstream
-  URL.revokeObjectURL(blobUrl);
-=======
   URL.revokeObjectURL(objectUrl);
->>>>>>> Stashed changes
 }
 
 export const Api = {
@@ -230,10 +230,7 @@ export const Api = {
   adminAntrianPanggil: (payload) => apiCall('admin/antrian/panggil', { method: 'POST', body: payload, auth: 'internal' }),
   adminAntrianLewati: (id_antrian) => apiCall(`admin/antrian/lewati/${id_antrian}`, { method: 'POST', auth: 'internal' }),
   adminAntrianCheckin: (payload) => apiCall('admin/antrian/checkin', { method: 'POST', body: payload, auth: 'internal' }),
-<<<<<<< Updated upstream
   adminAntrianSelesai: (id_antrian, payload) => apiCall(`admin/antrian/selesai/${id_antrian}`, { method: 'POST', body: payload, auth: 'internal' }),
-=======
-  adminAntrianSelesai: (id_antrian) => apiCall(`admin/antrian/selesai/${id_antrian}`, { method: 'POST', auth: 'internal' }),
 
   // ---- Admin: Dashboard & Laporan (FR-9.1, FR-9.2) ----
   adminDashboardStatistik: (filter) => apiCall('admin/dashboard/statistik', { method: 'GET', query: filter, auth: 'internal' }),
@@ -245,5 +242,4 @@ export const Api = {
   adminPenggunaCreate: (data) => apiCall('admin/pengguna/create', { method: 'POST', body: data, auth: 'internal' }),
   adminPenggunaUpdate: (id, data) => apiCall(`admin/pengguna/update/${id}`, { method: 'POST', body: data, auth: 'internal' }),
   adminPenggunaDelete: (id) => apiCall(`admin/pengguna/delete/${id}`, { method: 'POST', auth: 'internal' }),
->>>>>>> Stashed changes
 };
