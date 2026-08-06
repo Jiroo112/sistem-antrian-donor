@@ -18,7 +18,7 @@ frontend/
 │       ├── elements.js             -> referensi #app / #nav-slot
 │       ├── ui.js                     -> pageHeader(), val()
 │       ├── qr.js                      -> render QR code e-ticket (FR-4.2)
-│       └── views/                      -> satu file per halaman (home, jadwal, antrian, dst)
+│       └── views/                      -> satu file per halaman (home, jadwal, antrian, riwayat, dst)
 ├── internal/                  -> UI untuk Petugas Loket / Admin UDD / Super Admin
 │   └── js/
 │       ├── main.js, router.js (History API, prefix /admin), nav.js
@@ -95,6 +95,10 @@ tetap disajikan langsung sebagai file oleh `.htaccess` tanpa lewat CI3.
   Antrian (FR-4.4), batas waktu check-in (FR-4.3)
 - Tracking posisi antrian real-time -- nomor sedang dilayani, jumlah orang
   di depan, estimasi tunggu, auto-refresh tiap 5 detik (FR-5.1/5.2/5.3)
+- Riwayat & Sertifikat Donor (`/riwayat`) -- riwayat lengkap donor beserta
+  status kelayakan (FR-8.1), unduh sertifikat digital PDF untuk donor yang
+  selesai dan dinyatakan layak oleh petugas (FR-8.2), estimasi tanggal boleh
+  donor lagi berdasarkan interval 3 bulan (FR-8.3)
 
 **Panel Internal** (`/admin`, `/admin/jadwal`, dst) -- halamannya dibedakan
 per peran (lihat `internal/js/permissions.js`), bukan semua role lihat UI
@@ -102,7 +106,10 @@ yang sama:
 - Masuk internal (Petugas Loket / Admin UDD / Super Admin)
 - **Petugas Loket**: Panggil Antrian -- panggil nomor berikutnya/ulang,
   lewati (tidak hadir), verifikasi kehadiran lewat scan/ketik kode QR,
-  tandai selesai (FR-7.2, FR-7.3), plus tautan ke Papan Antrian (FR-5.4)
+  tandai selesai sekaligus mencatat hasil donor -- status kelayakan, volume
+  darah, catatan (FR-7.2, FR-7.3, dasar data buat FR-8.x -- BR5: keputusan
+  akhir kelayakan tetap di tangan petugas medis), plus tautan ke Papan
+  Antrian (FR-5.4)
 - **Admin UDD/Cabang**: Kelola Jadwal & Kuota (FR-7.1), Kelola Lokasi Donor
   (FR-7.4)
 - **Super Admin**: akses ke semua halaman di atas (superset) -- fitur
@@ -114,8 +121,17 @@ publik tanpa login, dimaksudkan ditayangkan penuh layar di TV/monitor lokasi
 donor, auto-refresh tiap 5 detik (FR-5.4).
 
 ## Yang belum ada UI-nya (karena backend-nya juga belum ada)
-Notifikasi (FR-6.x), Riwayat & Sertifikat Donor (FR-8.x), dan
-Dashboard/Laporan (FR-9.x). Begitu endpoint-endpoint ini tersedia di
-backend, UI-nya bisa ditambahkan sebagai view baru mengikuti pola yang sama
-seperti view-view yang sudah ada di `pendonor/js/views/` /
+Notifikasi (FR-6.x) dan Dashboard/Laporan (FR-9.x). Begitu endpoint-endpoint
+ini tersedia di backend, UI-nya bisa ditambahkan sebagai view baru mengikuti
+pola yang sama seperti view-view yang sudah ada di `pendonor/js/views/` /
 `internal/js/views/`.
+
+## Catatan implementasi: Sertifikat Donor Digital (FR-8.2)
+PDF-nya dirender server-side lewat `dompdf/dompdf` (composer) di
+`Riwayat::sertifikat()` -- `application/views/sertifikat_donor.php` HANYA
+dipakai sebagai template HTML->PDF lewat Dompdf, BUKAN halaman web biasa,
+jadi CSS-nya sengaja dibatasi ke fitur yang didukung Dompdf (tanpa
+flexbox/grid). Endpoint-nya butuh header `Authorization: Bearer <token>`
+seperti endpoint lain, jadi tidak bisa diunduh lewat `<a href>` navigasi
+biasa -- `Api.unduhSertifikat()` di `js/api.js` melakukan `fetch()` manual,
+lalu memicu-download hasilnya lewat Blob URL sementara.

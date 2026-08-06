@@ -58,6 +58,7 @@ export async function viewAntrian() {
             <tbody><tr><td colspan="5"><div class="skeleton" style="height:20px;"></div></td></tr></tbody>
           </table>
         </div>
+        <div id="selesai-form-slot" style="margin-top:16px;"></div>
       </div>
     </div>
   `;
@@ -72,9 +73,15 @@ export async function viewAntrian() {
   const btnPanggilBerikutnya = document.getElementById('btn-panggil-berikutnya');
   const papanAntrianRow = document.getElementById('papan-antrian-row');
   const linkPapanAntrian = document.getElementById('link-papan-antrian');
+  const selesaiFormSlot = document.getElementById('selesai-form-slot');
 
   let idJadwalTerpilih = null;
   let sedangMemuat = false;
+  // Dicek tiap poll: kalau true, lewati refresh tabel supaya form kelayakan
+  // yang lagi dibuka petugas (FR-8.x: hasil_donor) tidak tiba-tiba berubah
+  // di bawah tangan mereka -- pola sama seperti sedangIsiFormJadwalUlang di
+  // frontend/pendonor/js/views/antrian.js.
+  let sedangIsiFormSelesai = false;
 
   // FR-5.4: papan antrian aktornya "Sistem, Petugas Loket" -- tautannya
   // sengaja ditaruh di sini (halaman petugas), bukan di Kelola Jadwal, karena
@@ -213,16 +220,65 @@ export async function viewAntrian() {
     }
   }
 
-  async function aksiSelesai(btn, idAntrian) {
-    setLoading(btn, true);
-    try {
-      await Api.adminAntrianSelesai(idAntrian);
-      toast('Antrian ditandai selesai.', 'success');
-      loadAntrian();
-    } catch (e) {
-      toast(e.message, 'error');
-      setLoading(btn, false, 'Selesaikan');
-    }
+  // FR-7.3 penutup + FR-8.x: menandai antrian selesai sekaligus mencatat
+  // hasil donor (hasil_donor) -- BR5: keputusan akhir kelayakan donor darah
+  // tetap di tangan petugas medis/skrining di lokasi, bukan otomatis dari
+  // kuesioner self-assessment pendonor. Makanya "Selesaikan" tidak langsung
+  // eksekusi, tapi buka form kecil dulu supaya petugas memilih kelayakannya.
+  function aksiSelesai(btn, idAntrian) {
+    sedangIsiFormSelesai = true;
+    selesaiFormSlot.innerHTML = `
+      <div class="card" style="background:var(--paper);">
+        <p class="eyebrow" style="margin-bottom:10px;">Tandai Selesai — Nomor ${String(btn.closest('tr').querySelector('td').textContent).trim()}</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;">
+          <div class="field" style="margin-bottom:0;min-width:180px;">
+            <label for="input-kelayakan">Status kelayakan</label>
+            <select class="input" id="input-kelayakan">
+              <option value="layak">Layak</option>
+              <option value="tidak_layak">Tidak Layak</option>
+              <option value="ditunda">Ditunda</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:0;min-width:160px;">
+            <label for="input-volume">Volume darah (mL)</label>
+            <input class="input" id="input-volume" type="number" min="0" step="1" placeholder="Opsional">
+          </div>
+          <div class="field" style="margin-bottom:0;flex:1;min-width:200px;">
+            <label for="input-catatan">Catatan petugas</label>
+            <input class="input" id="input-catatan" type="text" placeholder="Opsional">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <button class="btn btn-primary btn-sm" id="btn-konfirmasi-selesai">Konfirmasi Selesai</button>
+          <button class="btn btn-ghost btn-sm" id="btn-batal-selesai">Batal</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('btn-batal-selesai').addEventListener('click', () => {
+      sedangIsiFormSelesai = false;
+      selesaiFormSlot.innerHTML = '';
+    });
+
+    document.getElementById('btn-konfirmasi-selesai').addEventListener('click', async (e) => {
+      const btnKonfirmasi = e.currentTarget;
+      const payload = {
+        status_kelayakan: document.getElementById('input-kelayakan').value,
+        volume_darah: document.getElementById('input-volume').value || null,
+        catatan_petugas: document.getElementById('input-catatan').value || null,
+      };
+      setLoading(btnKonfirmasi, true);
+      try {
+        await Api.adminAntrianSelesai(idAntrian, payload);
+        toast('Antrian ditandai selesai.', 'success');
+        sedangIsiFormSelesai = false;
+        selesaiFormSlot.innerHTML = '';
+        loadAntrian();
+      } catch (e) {
+        toast(e.message, 'error');
+        setLoading(btnKonfirmasi, false, 'Konfirmasi Selesai');
+      }
+    });
   }
 
   btnPanggilBerikutnya.addEventListener('click', async () => {
@@ -271,6 +327,7 @@ export async function viewAntrian() {
       clearInterval(pollTimer);
       return;
     }
+    if (sedangIsiFormSelesai) return;
     loadAntrian();
   }, INTERVAL_POLLING_MS);
 

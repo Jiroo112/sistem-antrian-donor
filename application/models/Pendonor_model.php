@@ -37,17 +37,22 @@ class Pendonor_model extends CI_Model {
         return $this->db->update($this->table, $data);
     }
 
-    // FR-8.3: hitung estimasi tanggal boleh donor berikutnya (interval 3 bulan / 12 minggu)
+    // FR-8.3: hitung estimasi tanggal boleh donor berikutnya (interval 3 bulan / 12 minggu).
+    // Dasarnya donor yang BENAR-BENAR berhasil (hasil_donor.status_kelayakan =
+    // 'layak'), bukan sekadar antrian.status = 'selesai' -- selaras BR5:
+    // keputusan akhir kelayakan tetap di tangan petugas medis, jadi donor yang
+    // ditolak/ditunda petugas tidak seharusnya mengunci interval 3 bulan.
     public function get_tanggal_donor_terakhir($id_pendonor)
     {
-        $this->db->select('a.waktu_selesai');
-        $this->db->from('antrian a');
+        $this->db->select('h.tanggal');
+        $this->db->from('hasil_donor h');
+        $this->db->join('antrian a', 'a.id_antrian = h.id_antrian');
         $this->db->where('a.id_pendonor', $id_pendonor);
-        $this->db->where('a.status', 'selesai');
-        $this->db->order_by('a.waktu_selesai', 'DESC');
+        $this->db->where('h.status_kelayakan', 'layak');
+        $this->db->order_by('h.tanggal', 'DESC');
         $this->db->limit(1);
         $row = $this->db->get()->row();
-        return $row ? $row->waktu_selesai : null;
+        return $row ? $row->tanggal : null;
     }
     
     public function update_password($id_pendonor, $password_hash)

@@ -18,6 +18,7 @@ class Antrian extends MY_Controller {
         $this->verify_role(['petugas_loket', 'admin_udd', 'super_admin']);
         $this->load->model('Antrian_model');
         $this->load->model('Jadwal_model');
+        $this->load->model('Hasil_donor_model');
     }
 
     private function get_json_input()
@@ -176,16 +177,20 @@ class Antrian extends MY_Controller {
 
     /**
      * Menutup alur: tandai antrian selesai diproses setelah donor selesai
-     * secara fisik di lokasi. Sengaja cuma ubah status + catat waktu_selesai
-     * (bukan skrining detail/sertifikat -- itu wilayah Modul Riwayat &
-     * Sertifikat Donor/FR-8.x yang belum dikerjakan) supaya alur antrian
-     * tidak macet selamanya di 'sedang_diproses', dan supaya BR2 (interval
-     * minimal 3 bulan, lihat Pendonor_model::get_tanggal_donor_terakhir())
-     * punya data 'selesai' yang bisa dipakai.
+     * secara fisik di lokasi. Sekaligus mencatat hasil donor (Modul Riwayat
+     * & Sertifikat Donor, FR-8.x) -- BR5: keputusan akhir kelayakan donor
+     * darah tetap di tangan petugas medis/skrining di lokasi, jadi field ini
+     * diisi petugas di sini, bukan otomatis dari kuesioner self-assessment
+     * pendonor. status_kelayakan default 'layak' kalau tidak dikirim (supaya
+     * tidak jadi breaking change untuk client lama), tapi UI panel petugas
+     * saat ini selalu mengirimnya secara eksplisit.
      * POST /admin/antrian/selesai/:id_antrian
+     * Body (opsional): { status_kelayakan, volume_darah, catatan_petugas }
      */
     public function selesai($id_antrian)
     {
+        $this->get_json_input();
+
         $antrian = $this->Antrian_model->get_by_id($id_antrian);
         if (!$antrian) {
             json_response(404, 'error', 'Antrian tidak ditemukan');
@@ -196,10 +201,32 @@ class Antrian extends MY_Controller {
             return;
         }
 
+        $status_kelayakan = $this->input->post('status_kelayakan');
+        if (empty($status_kelayakan)) {
+            $status_kelayakan = 'layak';
+        }
+        if (!in_array($status_kelayakan, array('layak', 'tidak_layak', 'ditunda'), TRUE)) {
+            json_response(400, 'error', 'status_kelayakan tidak valid (layak/tidak_layak/ditunda)');
+            return;
+        }
+
+        $volume_darah = $this->input->post('volume_darah');
+        $catatan_petugas = $this->input->post('catatan_petugas');
+        $waktu_selesai = date('Y-m-d H:i:s');
+
         $this->Antrian_model->set_status($id_antrian, 'selesai', array(
-            'waktu_selesai' => date('Y-m-d H:i:s'),
+            'waktu_selesai' => $waktu_selesai,
         ));
 
-        json_response(200, 'success', 'Antrian ditandai selesai');
+        $this->Hasil_donor_model->upsert($id_antrian, array(
+            'status_kelayakan' => $status_kelayakan,
+            'volume_darah'     => ($volume_darah !== null && $volume_darah !== '') ? $volume_darah : null,
+            'catatan_petugas'  => ($catatan_petugas !== null && $catatan_petugas !== '') ? $catatan_petugas : null,
+            'tanggal'          => date('Y-m-d'),
+        ));
+
+        json_response(200, 'success', 'Antrian ditandai selesai', array(
+            'status_kelayakan' => $status_kelayakan,
+        ));
     }
 }

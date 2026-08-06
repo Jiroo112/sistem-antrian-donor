@@ -30,12 +30,18 @@ class Antrian_model extends CI_Model {
         return $this->db->get($this->table)->row();
     }
 
+    // FR-8.1: riwayat dipakai baik oleh "Antrian Saya" (ringkas) maupun
+    // halaman "Riwayat & Sertifikat Donor" (FR-8.x) -- makanya sudah ikut
+    // LEFT JOIN hasil_donor dari awal supaya kolom kelayakan/volume darah
+    // (buat menentukan tombol "Unduh Sertifikat" muncul atau tidak, FR-8.2)
+    // tersedia tanpa query terpisah lagi di kedua tempat itu.
     public function get_riwayat_by_pendonor($id_pendonor)
     {
-        $this->db->select('antrian.*, jadwal_donor.tanggal, jadwal_donor.slot_waktu, lokasi_donor.nama_lokasi');
+        $this->db->select('antrian.*, jadwal_donor.tanggal, jadwal_donor.slot_waktu, lokasi_donor.nama_lokasi, hasil_donor.status_kelayakan, hasil_donor.volume_darah, hasil_donor.tanggal AS tanggal_hasil');
         $this->db->from($this->table);
         $this->db->join('jadwal_donor', 'jadwal_donor.id_jadwal = antrian.id_jadwal');
         $this->db->join('lokasi_donor', 'lokasi_donor.id_lokasi = jadwal_donor.id_lokasi');
+        $this->db->join('hasil_donor', 'hasil_donor.id_antrian = antrian.id_antrian', 'left');
         $this->db->where('antrian.id_pendonor', $id_pendonor);
         $this->db->order_by('antrian.created_at', 'DESC');
         return $this->db->get()->result();

@@ -90,6 +90,44 @@ async function apiCall(path, { method = 'GET', body = null, auth = null, query =
   return json;
 }
 
+/**
+ * Unduh file biner (mis. PDF sertifikat, FR-8.2) yang butuh header
+ * Authorization -- makanya tidak bisa dipakai lewat `<a href>` navigasi
+ * biasa (token JWT tidak boleh disisipkan ke URL). fetch() manual di sini,
+ * lalu Blob-nya dipicu-download lewat elemen <a> sementara.
+ */
+async function unduhBlob(path, fallbackFilename) {
+  const url = API_BASE_URL.replace(/\/$/, '') + '/' + path.replace(/^\//, '');
+  const token = Auth.getToken('pendonor');
+
+  const res = await fetch(url, {
+    headers: token ? { Authorization: 'Bearer ' + token } : {},
+  });
+
+  if (!res.ok) {
+    let message = `Gagal mengunduh file (HTTP ${res.status})`;
+    try {
+      const json = await res.json();
+      if (json && json.message) message = json.message;
+    } catch (_) { /* respons bukan JSON */ }
+    throw new Error(message);
+  }
+
+  const blob = await res.blob();
+  const disposition = res.headers.get('Content-Disposition') || '';
+  const match = disposition.match(/filename="?([^"]+)"?/);
+  const filename = match ? match[1] : fallbackFilename;
+
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(blobUrl);
+}
+
 export const Api = {
   // ---- Auth (FR-1.x) ----
   register: (data) => apiCall('auth/register', { method: 'POST', body: data }),
@@ -124,6 +162,10 @@ export const Api = {
   // ---- Tracking (FR-5.4, publik) ----
   papanAntrian: (id_jadwal) => apiCall('papan-antrian', { method: 'GET', query: { id_jadwal } }),
 
+  // ---- Riwayat & Sertifikat Donor (FR-8.x) ----
+  riwayatSaya: () => apiCall('riwayat', { method: 'GET', auth: 'pendonor' }),
+  unduhSertifikat: (id_antrian) => unduhBlob(`riwayat/${id_antrian}/sertifikat`, `Sertifikat-Donor-${id_antrian}.pdf`),
+
   // ---- Admin: Jadwal (FR-7.1) ----
   adminJadwalList: (filter) => apiCall('admin/jadwal', { method: 'GET', query: filter, auth: 'internal' }),
   adminJadwalCreate: (data) => apiCall('admin/jadwal/create', { method: 'POST', body: data, auth: 'internal' }),
@@ -141,5 +183,5 @@ export const Api = {
   adminAntrianPanggil: (payload) => apiCall('admin/antrian/panggil', { method: 'POST', body: payload, auth: 'internal' }),
   adminAntrianLewati: (id_antrian) => apiCall(`admin/antrian/lewati/${id_antrian}`, { method: 'POST', auth: 'internal' }),
   adminAntrianCheckin: (payload) => apiCall('admin/antrian/checkin', { method: 'POST', body: payload, auth: 'internal' }),
-  adminAntrianSelesai: (id_antrian) => apiCall(`admin/antrian/selesai/${id_antrian}`, { method: 'POST', auth: 'internal' }),
+  adminAntrianSelesai: (id_antrian, payload) => apiCall(`admin/antrian/selesai/${id_antrian}`, { method: 'POST', body: payload, auth: 'internal' }),
 };

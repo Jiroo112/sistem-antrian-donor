@@ -24,6 +24,7 @@ export function statusBadgeClass(status) {
     selesai: 'selesai', lolos_screening_awal: 'lolos',
     perlu_pemeriksaan_lanjutan: 'risiko', nonaktif: 'nonaktif',
     dibatalkan: 'gagal', tidak_hadir: 'gagal',
+    layak: 'selesai', tidak_layak: 'gagal', ditunda: 'risiko',
   };
   return 'badge--' + (map[status] || 'info');
 }
@@ -33,5 +34,12 @@ export function labelStatusAntrian(status) {
     menunggu: 'Menunggu', dipanggil: 'Dipanggil', sedang_diproses: 'Sedang Diproses',
     selesai: 'Selesai', tidak_hadir: 'Tidak Hadir', dibatalkan: 'Dibatalkan',
   };
+  return map[status] || status;
+}
+
+// FR-8.x: label kelayakan hasil donor (diisi petugas saat menandai antrian
+// selesai, lihat admin/Antrian::selesai() -- BR5).
+export function labelKelayakan(status) {
+  const map = { layak: 'Layak', tidak_layak: 'Tidak Layak', ditunda: 'Ditunda' };
   return map[status] || status;
 }

@@ -12,6 +12,7 @@ export function renderNav() {
         ['/jadwal', 'Cari Jadwal'],
         ['/lokasi', 'Lokasi'],
         ['/antrian', 'Antrian Saya'],
+        ['/riwayat', 'Riwayat & Sertifikat'],
         ['/dashboard', 'Dasbor Saya'],
       ]
     : [

@@ -103,6 +103,10 @@ $route['api/antrian/(:num)/jadwal-ulang']['put'] = 'antrian/jadwal_ulang/$1';
 // FR-5.4: papan antrian digital, publik tanpa login.
 $route['api/papan-antrian']['get'] = 'papan/antrian';
 
+// Modul 4.8: Riwayat dan Sertifikat Donor (FR-8.1 - FR-8.3)
+$route['api/riwayat']['get']                       = 'riwayat/index';
+$route['api/riwayat/(:num)/sertifikat']['get']     = 'riwayat/sertifikat/$1';
+
 // Fallback: rute lain di bawah prefix "api/" (mis. admin/jadwal/*,
 // admin/lokasi/* yang pakai default routing CI3 di atas) diteruskan apa
 // adanya setelah prefix "api/" dibuang.
