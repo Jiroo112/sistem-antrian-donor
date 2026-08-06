@@ -103,13 +103,21 @@ $route['api/antrian/(:num)/jadwal-ulang']['put'] = 'antrian/jadwal_ulang/$1';
 // FR-5.4: papan antrian digital, publik tanpa login.
 $route['api/papan-antrian']['get'] = 'papan/antrian';
 
+<<<<<<< Updated upstream
 // Modul 4.8: Riwayat dan Sertifikat Donor (FR-8.1 - FR-8.3)
 $route['api/riwayat']['get']                       = 'riwayat/index';
 $route['api/riwayat/(:num)/sertifikat']['get']     = 'riwayat/sertifikat/$1';
+=======
+// Modul 4.9: Dashboard dan Laporan (FR-9.1 - FR-9.3) -- pakai default
+// routing CI3 juga (admin/dashboard/statistik, admin/laporan,
+// admin/laporan/export, admin/pengguna/*), sama seperti pola
+// admin/Jadwal.php & admin/Lokasi.php di atas, tidak butuh entry eksplisit.
+>>>>>>> Stashed changes
 
 // Fallback: rute lain di bawah prefix "api/" (mis. admin/jadwal/*,
-// admin/lokasi/* yang pakai default routing CI3 di atas) diteruskan apa
-// adanya setelah prefix "api/" dibuang.
+// admin/lokasi/*, admin/dashboard/*, admin/laporan/*, admin/pengguna/*
+// yang pakai default routing CI3 di atas) diteruskan apa adanya setelah
+// prefix "api/" dibuang.
 $route['api/(.+)'] = '$1';
 
 /*

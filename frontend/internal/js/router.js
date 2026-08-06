@@ -13,6 +13,9 @@ import { viewMasuk } from './views/masuk.js';
 import { viewJadwal } from './views/jadwal.js';
 import { viewLokasi } from './views/lokasi.js';
 import { viewAntrian } from './views/antrian.js';
+import { viewDashboard } from './views/dashboard.js';
+import { viewLaporan } from './views/laporan.js';
+import { viewPengguna } from './views/pengguna.js';
 
 function computeBasePath() {
   if (window.__BASE_PATH__ !== undefined) return window.__BASE_PATH__.replace(/\/+$/, '');
@@ -52,6 +55,9 @@ const routes = {
   '/jadwal': viewJadwal,
   '/lokasi': viewLokasi,
   '/antrian': viewAntrian,
+  '/dashboard': viewDashboard,
+  '/laporan': viewLaporan,
+  '/pengguna': viewPengguna,
 };
 
 export function resolveView(path) {

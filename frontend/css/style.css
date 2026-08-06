@@ -91,6 +91,53 @@ button, input, select, textarea{ font-family:inherit; font-size:inherit; }
 .nav__link:hover{ color:var(--ink); background:var(--crimson-tint); }
 .nav__link.is-active{ color:var(--crimson-dark); background:var(--crimson-tint); }
 
+/* ---------- sidebar (peran super_admin -- lihat frontend/internal/js/nav.js) ----------
+   Markup selalu ada di admin_shell.php, tapi disembunyikan (display:none)
+   sampai nav.js menandai <body class="layout-sidebar"> untuk pengguna yang
+   login sebagai super_admin. Untuk peran lain, topbar/.nav di atas yang dipakai. */
+.sidebar{
+  display:none;
+  position:fixed; top:0; left:0; bottom:0; width:248px;
+  flex-direction:column;
+  background:var(--paper-raised);
+  border-right:1px solid var(--line);
+  padding:20px 14px;
+  overflow-y:auto;
+  z-index:50;
+}
+.sidebar__brand{ display:flex; align-items:center; gap:10px; text-decoration:none; padding:6px 10px 24px; }
+.sidebar__nav{ display:flex; flex-direction:column; gap:2px; flex:1; }
+.sidebar__link{
+  display:block; width:100%; text-align:left;
+  padding:10px 14px; border-radius:var(--radius-s); font-weight:600; font-size:.9rem;
+  text-decoration:none; color:var(--slate); border:1px solid transparent; cursor:pointer; background:none;
+}
+.sidebar__link:hover{ color:var(--ink); background:var(--crimson-tint); }
+.sidebar__link.is-active{ color:var(--crimson-dark); background:var(--crimson-tint); }
+.sidebar__foot{
+  display:flex; flex-direction:column; align-items:flex-start; gap:10px;
+  padding-top:16px; margin-top:8px; border-top:1px solid var(--line);
+}
+.sidebar__link--logout{ color:#B4232E; }
+.sidebar__link--logout:hover{ background:#FBEBEB; color:#B4232E; }
+
+body.layout-sidebar .sidebar{ display:flex; }
+body.layout-sidebar #topbar{ display:none; }
+body.layout-sidebar #page-wrap{ margin-left:248px; }
+
+@media (max-width: 860px){
+  body.layout-sidebar .sidebar{
+    position:static; width:auto; flex-direction:row; flex-wrap:wrap; align-items:center;
+    border-right:none; border-bottom:1px solid var(--line);
+  }
+  body.layout-sidebar .sidebar__brand{ padding:6px 14px 6px 4px; }
+  body.layout-sidebar .sidebar__nav{ flex-direction:row; flex-wrap:wrap; }
+  body.layout-sidebar .sidebar__foot{
+    flex-direction:row; align-items:center; border-top:none; margin-top:0; padding-top:0; margin-left:auto;
+  }
+  body.layout-sidebar #page-wrap{ margin-left:0; }
+}
+
 /* ---------- buttons ---------- */
 .btn{
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
@@ -266,6 +313,18 @@ table.data tr:last-child td{ border-bottom:none; }
 .footer{ padding:40px 0 60px; text-align:center; }
 
 [hidden]{ display:none !important; }
+
+/* FR-9.2: cetak/simpan PDF laporan lewat window.print() -- sembunyikan
+   chrome halaman (nav, footer, toast) dan elemen ber-class "no-print"
+   (filter, tombol aksi), sisakan cuma tabel laporan yang tercetak. */
+@media print{
+  .topbar, .sidebar, .footer, .toast-wrap, .no-print{ display:none !important; }
+  body{ background:#fff; }
+  #page-wrap{ margin-left:0 !important; }
+  .shell{ padding:0 !important; max-width:none; }
+  .card{ box-shadow:none; border:none; padding:0; }
+  table.data{ font-size:.8rem; }
+}
 
 .spinner{
   width:16px; height:16px; border-radius:50%;

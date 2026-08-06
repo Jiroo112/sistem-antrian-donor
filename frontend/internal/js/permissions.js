@@ -5,10 +5,8 @@
  *   - Petugas Loket    -> Memanggil nomor antrian, verifikasi kehadiran
  *   - Admin UDD/Cabang -> Kelola jadwal, kuota, lokasi, laporan cabang
  *   - Super Admin      -> Kelola pengguna sistem, konfigurasi global, semua
- *                          laporan -- belum ada backend-nya sama sekali,
- *                          jadi untuk sementara Super Admin diberi akses ke
- *                          semua halaman yang SUDAH ada (superset), bukan
- *                          dikunci sampai fitur khususnya dibangun.
+ *                          laporan -- diberi akses ke semua halaman yang ada
+ *                          (superset), termasuk /pengguna yang khusus dia.
  *
  * router.js, nav.js, dan guards.js semua merujuk ke daftar ini -- nambah
  * halaman baru cukup nambah satu entri di NAV_ITEMS, tidak perlu ubah
@@ -18,6 +16,9 @@ export const NAV_ITEMS = [
   { route: '/antrian', label: 'Panggil Antrian', roles: ['petugas_loket', 'super_admin'] },
   { route: '/jadwal', label: 'Kelola Jadwal', roles: ['admin_udd', 'super_admin'] },
   { route: '/lokasi', label: 'Kelola Lokasi', roles: ['admin_udd', 'super_admin'] },
+  { route: '/dashboard', label: 'Dashboard', roles: ['admin_udd', 'super_admin'] },
+  { route: '/laporan', label: 'Laporan', roles: ['admin_udd', 'super_admin'] },
+  { route: '/pengguna', label: 'Pengguna Internal', roles: ['super_admin'] },
 ];
 
 const DEFAULT_ROUTE_BY_ROLE = {

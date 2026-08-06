@@ -9,25 +9,45 @@
 </head>
 <body>
 
-  <header class="topbar">
-    <div class="topbar__inner">
-      <a href="<?= $base_url ?>/admin" class="brand">
-        <span class="brand__mark">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 5 10.5 5 15.2C5 19 8.13 22 12 22C15.87 22 19 19 19 15.2C19 10.5 12 2 12 2Z" fill="white"/></svg>
-        </span>
-        <span class="brand__name">Panel Petugas<small>PMI / UDD · Internal</small></span>
-      </a>
-      <nav class="nav" id="nav-slot"></nav>
-    </div>
-  </header>
+  <!--
+    Sidebar kiri -- cuma ditampilkan untuk peran super_admin (lihat
+    document.body.classList "layout-sidebar" yang di-toggle oleh
+    frontend/internal/js/nav.js berdasarkan peran pengguna yang login).
+    Untuk peran lain sidebar ini tetap ada di DOM tapi disembunyikan lewat
+    CSS (default .sidebar{display:none}), topbar di bawah yang dipakai.
+  -->
+  <aside class="sidebar" id="sidebar">
+    <a href="<?= $base_url ?>/admin" class="sidebar__brand">
+      <span class="brand__mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 5 10.5 5 15.2C5 19 8.13 22 12 22C15.87 22 19 19 19 15.2C19 10.5 12 2 12 2Z" fill="white"/></svg>
+      </span>
+      <span class="brand__name">Panel Petugas<small>PMI / UDD · Internal</small></span>
+    </a>
+    <nav class="sidebar__nav" id="sidebar-nav-slot"></nav>
+    <div class="sidebar__foot" id="sidebar-foot-slot"></div>
+  </aside>
 
-  <main id="app"></main>
+  <div class="page-wrap" id="page-wrap">
+    <header class="topbar" id="topbar">
+      <div class="topbar__inner">
+        <a href="<?= $base_url ?>/admin" class="brand">
+          <span class="brand__mark">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 5 10.5 5 15.2C5 19 8.13 22 12 22C15.87 22 19 19 19 15.2C19 10.5 12 2 12 2Z" fill="white"/></svg>
+          </span>
+          <span class="brand__name">Panel Petugas<small>PMI / UDD · Internal</small></span>
+        </a>
+        <nav class="nav" id="nav-slot"></nav>
+      </div>
+    </header>
 
-  <footer class="footer">
-    <div class="shell">
-      <!-- <p class="muted">Panel ini untuk Petugas Loket, Admin UDD/Cabang, dan Super Admin. Fitur panggil antrian &amp; check-in QR (FR-7.2, FR-7.3) belum tersedia di backend saat ini.</p> -->
-    </div>
-  </footer>
+    <main id="app"></main>
+
+    <footer class="footer">
+      <div class="shell">
+        <!-- <p class="muted">Panel ini untuk Petugas Loket, Admin UDD/Cabang, dan Super Admin. Fitur panggil antrian &amp; check-in QR (FR-7.2, FR-7.3) belum tersedia di backend saat ini.</p> -->
+      </div>
+    </footer>
+  </div>
 
   <div class="toast-wrap" id="toast-wrap"></div>
 

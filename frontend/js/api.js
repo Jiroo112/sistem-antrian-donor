@@ -91,6 +91,7 @@ async function apiCall(path, { method = 'GET', body = null, auth = null, query =
 }
 
 /**
+<<<<<<< Updated upstream
  * Unduh file biner (mis. PDF sertifikat, FR-8.2) yang butuh header
  * Authorization -- makanya tidak bisa dipakai lewat `<a href>` navigasi
  * biasa (token JWT tidak boleh disisipkan ke URL). fetch() manual di sini,
@@ -121,11 +122,57 @@ async function unduhBlob(path, fallbackFilename) {
   const blobUrl = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = blobUrl;
+=======
+ * Unduh file (mis. CSV laporan) lewat fetch + Blob, bukan link <a href>
+ * biasa -- endpointnya butuh header Authorization (JWT bearer), yang tidak
+ * bisa disisipkan ke navigasi/link biasa. Nama file diambil dari header
+ * Content-Disposition yang dikirim backend (lihat admin/Laporan::export()).
+ */
+async function apiDownload(path, { query = null, auth = null } = {}) {
+  let url = API_BASE_URL.replace(/\/$/, '') + '/' + path.replace(/^\//, '');
+
+  if (query && Object.keys(query).length) {
+    const params = Object.entries(query)
+      .filter(([, v]) => v !== null && v !== undefined && v !== '')
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join('&');
+    if (params) url += '?' + params;
+  }
+
+  const headers = {};
+  if (auth) {
+    const token = Auth.getToken(auth);
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+  }
+
+  const res = await fetch(url, { headers });
+  if (!res.ok) {
+    let message = `Gagal mengunduh berkas (HTTP ${res.status})`;
+    try {
+      const json = await res.json();
+      if (json && json.message) message = json.message;
+    } catch (_) { /* respons bukan JSON, pakai pesan default */ }
+    throw new Error(message);
+  }
+
+  const disposition = res.headers.get('Content-Disposition') || '';
+  const match = disposition.match(/filename="?([^"]+)"?/);
+  const filename = match ? match[1] : 'unduhan.csv';
+  const blob = await res.blob();
+
+  const objectUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = objectUrl;
+>>>>>>> Stashed changes
   a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
+<<<<<<< Updated upstream
   URL.revokeObjectURL(blobUrl);
+=======
+  URL.revokeObjectURL(objectUrl);
+>>>>>>> Stashed changes
 }
 
 export const Api = {
@@ -183,5 +230,20 @@ export const Api = {
   adminAntrianPanggil: (payload) => apiCall('admin/antrian/panggil', { method: 'POST', body: payload, auth: 'internal' }),
   adminAntrianLewati: (id_antrian) => apiCall(`admin/antrian/lewati/${id_antrian}`, { method: 'POST', auth: 'internal' }),
   adminAntrianCheckin: (payload) => apiCall('admin/antrian/checkin', { method: 'POST', body: payload, auth: 'internal' }),
+<<<<<<< Updated upstream
   adminAntrianSelesai: (id_antrian, payload) => apiCall(`admin/antrian/selesai/${id_antrian}`, { method: 'POST', body: payload, auth: 'internal' }),
+=======
+  adminAntrianSelesai: (id_antrian) => apiCall(`admin/antrian/selesai/${id_antrian}`, { method: 'POST', auth: 'internal' }),
+
+  // ---- Admin: Dashboard & Laporan (FR-9.1, FR-9.2) ----
+  adminDashboardStatistik: (filter) => apiCall('admin/dashboard/statistik', { method: 'GET', query: filter, auth: 'internal' }),
+  adminLaporanList: (filter) => apiCall('admin/laporan', { method: 'GET', query: filter, auth: 'internal' }),
+  adminLaporanExport: (filter) => apiDownload('admin/laporan/export', { query: filter, auth: 'internal' }),
+
+  // ---- Admin: Manajemen Hak Akses Pengguna Internal (FR-9.3) ----
+  adminPenggunaList: (filter) => apiCall('admin/pengguna', { method: 'GET', query: filter, auth: 'internal' }),
+  adminPenggunaCreate: (data) => apiCall('admin/pengguna/create', { method: 'POST', body: data, auth: 'internal' }),
+  adminPenggunaUpdate: (id, data) => apiCall(`admin/pengguna/update/${id}`, { method: 'POST', body: data, auth: 'internal' }),
+  adminPenggunaDelete: (id) => apiCall(`admin/pengguna/delete/${id}`, { method: 'POST', auth: 'internal' }),
+>>>>>>> Stashed changes
 };
