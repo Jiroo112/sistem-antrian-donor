@@ -91,6 +91,15 @@ button, input, select, textarea{ font-family:inherit; font-size:inherit; }
 .nav__link:hover{ color:var(--ink); background:var(--crimson-tint); }
 .nav__link.is-active{ color:var(--crimson-dark); background:var(--crimson-tint); }
 
+/* FR-6.x: bell notifikasi navbar (lihat frontend/pendonor/js/notif-badge.js) */
+.nav__bell{ font-size:1.1rem; padding:8px 12px; }
+.notif-badge{
+  position:absolute; top:2px; right:2px; min-width:16px; height:16px; padding:0 3px;
+  border-radius:100px; background:var(--crimson); color:#fff;
+  font-family:var(--font-body); font-size:.62rem; font-weight:700; line-height:16px;
+  text-align:center;
+}
+
 /* ---------- sidebar (peran super_admin -- lihat frontend/internal/js/nav.js) ----------
    Markup selalu ada di admin_shell.php, tapi disembunyikan (display:none)
    sampai nav.js menandai <body class="layout-sidebar"> untuk pengguna yang

@@ -213,6 +213,10 @@ export const Api = {
   riwayatSaya: () => apiCall('riwayat', { method: 'GET', auth: 'pendonor' }),
   unduhSertifikat: (id_antrian) => unduhBlob(`riwayat/${id_antrian}/sertifikat`, `Sertifikat-Donor-${id_antrian}.pdf`),
 
+  // ---- Notifikasi (FR-6.x) ----
+  notifikasiSaya: () => apiCall('notifikasi', { method: 'GET', auth: 'pendonor' }),
+  notifikasiRingkasan: () => apiCall('notifikasi/ringkasan', { method: 'GET', auth: 'pendonor' }),
+
   // ---- Admin: Jadwal (FR-7.1) ----
   adminJadwalList: (filter) => apiCall('admin/jadwal', { method: 'GET', query: filter, auth: 'internal' }),
   adminJadwalCreate: (data) => apiCall('admin/jadwal/create', { method: 'POST', body: data, auth: 'internal' }),

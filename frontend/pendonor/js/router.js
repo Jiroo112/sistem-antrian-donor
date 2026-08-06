@@ -9,6 +9,7 @@ import { viewJadwal } from './views/jadwal.js';
 import { viewLokasi } from './views/lokasi.js';
 import { viewAntrianSaya } from './views/antrian.js';
 import { viewRiwayat } from './views/riwayat.js';
+import { viewNotifikasi } from './views/notifikasi.js';
 import { viewDaftar } from './views/daftar.js';
 import { viewVerifikasiOtp } from './views/verifikasi-otp.js';
 import { viewMasuk } from './views/masuk.js';
@@ -58,6 +59,7 @@ const routes = {
   '/lokasi': viewLokasi,
   '/antrian': viewAntrianSaya,
   '/riwayat': viewRiwayat,
+  '/notifikasi': viewNotifikasi,
   '/daftar': viewDaftar,
   '/verifikasi-otp': viewVerifikasiOtp,
   '/masuk': viewMasuk,

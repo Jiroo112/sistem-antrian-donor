@@ -19,6 +19,32 @@ class Antrian extends MY_Controller {
         $this->load->model('Antrian_model');
         $this->load->model('Jadwal_model');
         $this->load->model('Hasil_donor_model');
+        $this->load->library('Notifikasi_service');
+        $this->config->load('antrian');
+    }
+
+    // FR-6.3: begitu satu nomor dipanggil, cek apakah ada pendonor yang
+    // gilirannya sekarang persis N nomor lagi (default 5, lihat
+    // application/config/antrian.php) -- kalau ada dan statusnya masih
+    // 'menunggu', kirimi notifikasi supaya dia bersiap ke lokasi.
+    private function notifikasi_giliran_mendekati($id_jadwal, $nomor_urut_dipanggil)
+    {
+        $ambang = (int) ($this->config->item('giliran_mendekati_n_nomor') ?: 5);
+        $target = $this->Antrian_model->get_by_jadwal_dan_nomor($id_jadwal, $nomor_urut_dipanggil + $ambang);
+        if (!$target) {
+            return;
+        }
+
+        $jadwal = $this->Jadwal_model->get_by_id_with_lokasi($id_jadwal);
+        $this->notifikasi_service->kirim($target->id_pendonor, 'giliran_mendekati', sprintf(
+            'Giliran Anda sudah dekat! Nomor %d sedang dipanggil di %s (%s, %s). Nomor antrian Anda #%d, sekitar %d nomor lagi -- mohon bersiap menuju lokasi.',
+            $nomor_urut_dipanggil,
+            $jadwal ? $jadwal->nama_lokasi : '-',
+            $jadwal ? $jadwal->tanggal : '-',
+            $jadwal ? $jadwal->slot_waktu : '-',
+            $target->nomor_urut,
+            $ambang
+        ));
     }
 
     private function get_json_input()
@@ -91,6 +117,7 @@ class Antrian extends MY_Controller {
             }
 
             $this->Antrian_model->set_status($id_antrian, 'dipanggil');
+            $this->notifikasi_giliran_mendekati($antrian->id_jadwal, $antrian->nomor_urut);
             json_response(200, 'success', 'Nomor antrian berhasil dipanggil ulang', $this->Antrian_model->get_by_id($id_antrian));
             return;
         }
@@ -109,6 +136,7 @@ class Antrian extends MY_Controller {
         }
 
         $this->Antrian_model->set_status($next->id_antrian, 'dipanggil');
+        $this->notifikasi_giliran_mendekati($id_jadwal, $next->nomor_urut);
         json_response(200, 'success', 'Nomor antrian berikutnya berhasil dipanggil', $this->Antrian_model->get_by_id($next->id_antrian));
     }
 
@@ -132,6 +160,15 @@ class Antrian extends MY_Controller {
 
         $this->Antrian_model->set_status($id_antrian, 'tidak_hadir');
         $this->Jadwal_model->tambah_kuota($antrian->id_jadwal);
+
+        $jadwal = $this->Jadwal_model->get_by_id_with_lokasi($antrian->id_jadwal);
+        $this->notifikasi_service->kirim($antrian->id_pendonor, 'dilewati', sprintf(
+            'Nomor antrian Anda #%d di %s (%s, %s) dilewati karena tidak merespons panggilan. Kuota sudah dikembalikan -- silakan hubungi petugas di lokasi kalau masih ingin donor hari ini.',
+            $antrian->nomor_urut,
+            $jadwal ? $jadwal->nama_lokasi : '-',
+            $jadwal ? $jadwal->tanggal : '-',
+            $jadwal ? $jadwal->slot_waktu : '-'
+        ));
 
         json_response(200, 'success', 'Antrian ditandai tidak hadir, kuota dikembalikan');
     }

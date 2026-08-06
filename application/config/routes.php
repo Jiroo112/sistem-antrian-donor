@@ -103,6 +103,13 @@ $route['api/antrian/(:num)/jadwal-ulang']['put'] = 'antrian/jadwal_ulang/$1';
 // FR-5.4: papan antrian digital, publik tanpa login.
 $route['api/papan-antrian']['get'] = 'papan/antrian';
 
+// Modul 4.6: Notifikasi (FR-6.1 - FR-6.4) -- ini cuma daftar notifikasi
+// in-app pendonor; pengiriman notifikasinya sendiri dipicu dari
+// Antrian::ambil(), admin\Antrian::panggil(), admin\Jadwal::update()/
+// delete(), dan Cron::pengingat_h1() lewat Notifikasi_service.
+$route['api/notifikasi']['get']           = 'notifikasi/index';
+$route['api/notifikasi/ringkasan']['get'] = 'notifikasi/ringkasan';
+
 // Modul 4.8: Riwayat dan Sertifikat Donor (FR-8.1 - FR-8.3)
 $route['api/riwayat']['get']                       = 'riwayat/index';
 $route['api/riwayat/(:num)/sertifikat']['get']     = 'riwayat/sertifikat/$1';
@@ -116,6 +123,14 @@ $route['api/riwayat/(:num)/sertifikat']['get']     = 'riwayat/sertifikat/$1';
 // yang pakai default routing CI3 di atas) diteruskan apa adanya setelah
 // prefix "api/" dibuang.
 $route['api/(.+)'] = '$1';
+
+// FR-6.2: Cron.php dipanggil lewat CLI ("php index.php cron pengingat_h1"),
+// BUKAN request HTTP -- tapi routing CI3 diproses sama saja untuk CLI
+// maupun HTTP, jadi "cron/..." tetap harus dikecualikan eksplisit di sini
+// SEBELUM catch-all SPA "(.+)" di bawah, kalau tidak, cron/pengingat_h1
+// akan "dicuri" jadi pendonor/index/cron/pengingat_h1 seperti route lain
+// yang tidak dikenal.
+$route['cron/(:any)'] = 'cron/$1';
 
 /*
 | -------------------------------------------------------------------------

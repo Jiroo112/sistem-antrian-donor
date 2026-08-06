@@ -74,6 +74,11 @@ class Antrian extends MY_Controller {
             'status'              => $antrian->status,
             'qr_code'             => $antrian->qr_code,
             'batas_waktu_checkin' => $antrian->batas_waktu_checkin,
+            // Dipakai frontend (antrian-alert.js) buat mendeteksi "panggil
+            // ulang" nomor yang sama -- statusnya sendiri tidak berubah
+            // (tetap 'dipanggil'), jadi perlu penanda lain yang berubah
+            // tiap kali petugas memanggil.
+            'updated_at'          => $antrian->updated_at,
             'jadwal' => $jadwal ? array(
                 'id_jadwal'   => $jadwal->id_jadwal,
                 'tanggal'     => $jadwal->tanggal,
@@ -175,6 +180,19 @@ class Antrian extends MY_Controller {
         }
 
         $antrian = $this->Antrian_model->get_by_id($id_antrian);
+
+        // FR-6.1: notifikasi konfirmasi pendaftaran, berisi ringkasan
+        // jadwal, lokasi, dan nomor antrian.
+        $this->load->library('Notifikasi_service');
+        $this->notifikasi_service->kirim($id_pendonor, 'konfirmasi_pendaftaran', sprintf(
+            'Nomor antrian Anda berhasil diterbitkan: #%d untuk jadwal %s (%s) di %s. Mohon check-in sebelum %s.',
+            $antrian->nomor_urut,
+            $jadwal->tanggal,
+            $jadwal->slot_waktu,
+            $jadwal->nama_lokasi,
+            $antrian->batas_waktu_checkin
+        ));
+
         json_response(201, 'success', 'Nomor antrian berhasil diterbitkan', $this->format_e_ticket($antrian, $jadwal));
     }
 

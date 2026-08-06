@@ -17,6 +17,19 @@ class Jadwal extends MY_Controller {
         $this->verify_role(['petugas_loket', 'admin_udd', 'super_admin']);
         $this->load->model('Jadwal_model');
         $this->load->model('Lokasi_model');
+        $this->load->model('Antrian_model');
+        $this->load->library('Notifikasi_service');
+    }
+
+    // FR-6.4: beri tahu semua pendonor yang antriannya masih aktif
+    // (menunggu/dipanggil, belum check-in) di jadwal ini kalau ada
+    // perubahan/pembatalan -- dipanggil dari update() dan delete().
+    private function notifikasi_perubahan_jadwal($id_jadwal, $pesan)
+    {
+        $pendonor_terdampak = $this->Antrian_model->get_menunggu_by_jadwal($id_jadwal);
+        foreach ($pendonor_terdampak as $antrian) {
+            $this->notifikasi_service->kirim($antrian->id_pendonor, 'perubahan_jadwal', $pesan);
+        }
     }
 
     /**
@@ -143,19 +156,54 @@ class Jadwal extends MY_Controller {
         });
 
         $this->Jadwal_model->update($id_jadwal, $data);
+
+        // FR-6.4: cuma perubahan yang benar-benar berdampak ke pendonor
+        // yang sudah terdaftar (tanggal/jam/lokasi pindah, atau kegiatan
+        // dibatalkan) yang perlu diberi tahu -- ubah kuota_total saja
+        // tidak relevan buat mereka.
+        $perubahan_relevan = array_intersect_key($data, array_flip(['id_lokasi', 'tanggal', 'slot_waktu', 'status']));
+        if (!empty($perubahan_relevan)) {
+            $jadwal_baru = $this->Jadwal_model->get_by_id_with_lokasi($id_jadwal);
+            if (isset($perubahan_relevan['status']) && $perubahan_relevan['status'] === 'dibatalkan') {
+                $pesan = sprintf(
+                    'Mohon maaf, kegiatan donor darah pada %s (%s) di %s telah DIBATALKAN oleh penyelenggara.',
+                    $jadwal_baru->tanggal,
+                    $jadwal_baru->slot_waktu,
+                    $jadwal_baru->nama_lokasi
+                );
+            } else {
+                $pesan = sprintf(
+                    'Ada perubahan pada jadwal donor darah Anda. Jadwal terbaru: %s (%s) di %s.',
+                    $jadwal_baru->tanggal,
+                    $jadwal_baru->slot_waktu,
+                    $jadwal_baru->nama_lokasi
+                );
+            }
+            $this->notifikasi_perubahan_jadwal($id_jadwal, $pesan);
+        }
+
         json_response(200, 'success', 'Jadwal berhasil diperbarui');
     }
 
     public function delete($id_jadwal)
     {
         $this->verify_role(['admin_udd', 'super_admin']);
-        $jadwal = $this->Jadwal_model->get_by_id($id_jadwal);
+        $jadwal = $this->Jadwal_model->get_by_id_with_lokasi($id_jadwal);
         if (!$jadwal) {
             json_response(404, 'error', 'Jadwal tidak ditemukan');
             return;
         }
 
         $this->Jadwal_model->delete($id_jadwal);
+
+        // FR-6.4: notifikasi pembatalan kegiatan
+        $this->notifikasi_perubahan_jadwal($id_jadwal, sprintf(
+            'Mohon maaf, kegiatan donor darah pada %s (%s) di %s telah DIBATALKAN oleh penyelenggara.',
+            $jadwal->tanggal,
+            $jadwal->slot_waktu,
+            $jadwal->nama_lokasi
+        ));
+
         json_response(200, 'success', 'Jadwal dibatalkan');
     }
 }

@@ -25,6 +25,7 @@ export function statusBadgeClass(status) {
     perlu_pemeriksaan_lanjutan: 'risiko', nonaktif: 'nonaktif',
     dibatalkan: 'gagal', tidak_hadir: 'gagal',
     layak: 'selesai', tidak_layak: 'gagal', ditunda: 'risiko',
+    terkirim: 'aktif', gagal: 'gagal',
   };
   return 'badge--' + (map[status] || 'info');
 }

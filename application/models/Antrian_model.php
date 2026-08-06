@@ -223,11 +223,45 @@ class Antrian_model extends CI_Model {
         return $this->db->get()->result();
     }
 
+    // FR-6.3: cari antrian yang statusnya masih 'menunggu' persis di nomor
+    // urut tertentu pada satu jadwal -- dipakai admin\Antrian::panggil()
+    // buat nentuin pendonor mana yang gilirannya "N nomor lagi" begitu ada
+    // nomor baru dipanggil, supaya dia bisa dikirimi notifikasi bersiap.
+    public function get_by_jadwal_dan_nomor($id_jadwal, $nomor_urut)
+    {
+        $this->db->where('id_jadwal', $id_jadwal);
+        $this->db->where('nomor_urut', $nomor_urut);
+        $this->db->where('status', 'menunggu');
+        return $this->db->get($this->table)->row();
+    }
+
+    // FR-6.4: pendonor dengan antrian yang masih aktif menunggu giliran
+    // (belum check-in) pada satu jadwal -- dipakai admin\Jadwal::update()/
+    // delete() buat nentuin siapa yang perlu diberi tahu kalau jadwalnya
+    // berubah/dibatalkan. 'sedang_diproses' sengaja tidak diikutkan karena
+    // pendonor itu sudah check-in fisik di lokasi, perubahan jadwal tidak
+    // relevan lagi buat dia.
+    public function get_menunggu_by_jadwal($id_jadwal)
+    {
+        $this->db->where('id_jadwal', $id_jadwal);
+        $this->db->where_in('status', array('menunggu', 'dipanggil'));
+        return $this->db->get($this->table)->result();
+    }
+
     // Setter status generik dipakai bareng oleh panggil/lewati/checkin/selesai
     // -- $extra buat kolom timestamp terkait (waktu_checkin, waktu_selesai).
+    //
+    // updated_at dipaksa diisi manual (bukan cuma andalkan ON UPDATE
+    // CURRENT_TIMESTAMP di kolomnya) karena MySQL TIDAK membaruinya kalau
+    // nilai yang di-SET persis sama dengan yang sudah tersimpan -- sudah
+    // dites langsung, "SET status='dipanggil'" saat status memang sudah
+    // 'dipanggil' (kasus FR-7.2 "panggil ulang" nomor yang sama) tidak
+    // menyentuh updated_at sama sekali. Padahal frontend (antrian-alert.js)
+    // butuh updated_at berubah setiap panggilan supaya modal "Anda
+    // Dipanggil" muncul lagi walau statusnya sendiri tidak berubah.
     public function set_status($id_antrian, $status, array $extra = array())
     {
-        $data = array_merge(array('status' => $status), $extra);
+        $data = array_merge(array('status' => $status, 'updated_at' => date('Y-m-d H:i:s')), $extra);
         $this->db->where('id_antrian', $id_antrian);
         return $this->db->update($this->table, $data);
     }

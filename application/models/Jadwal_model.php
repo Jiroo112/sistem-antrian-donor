@@ -113,6 +113,18 @@ class Jadwal_model extends CI_Model {
         return $this->db->get()->row();
     }
 
+    // FR-6.2: semua jadwal aktif pada satu tanggal -- dipakai
+    // Cron::pengingat_h1() buat cari jadwal yang jatuh besok.
+    public function get_by_tanggal($tanggal)
+    {
+        $this->db->select('jadwal_donor.*, lokasi_donor.nama_lokasi');
+        $this->db->from($this->table);
+        $this->db->join('lokasi_donor', 'lokasi_donor.id_lokasi = jadwal_donor.id_lokasi');
+        $this->db->where('jadwal_donor.tanggal', $tanggal);
+        $this->db->where('jadwal_donor.status', 'aktif');
+        return $this->db->get()->result();
+    }
+
     // Dipakai buat cek bentrok sebelum create/update, karena ada UNIQUE KEY
     // (id_lokasi, tanggal, slot_waktu) di tabel -- kalau nggak dicek dulu,
     // pendonor/admin bakal lihat error MySQL mentah alih-alih pesan yang jelas.
