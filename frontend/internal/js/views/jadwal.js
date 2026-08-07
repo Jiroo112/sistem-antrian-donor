@@ -1,7 +1,7 @@
 import { app } from '../elements.js';
 import { el, escapeHtml, setLoading, toast, renderAlertError } from '../../../js/shared/dom.js';
 import { Api } from '../../../js/api.js';
-import { pageHeader } from '../ui.js';
+import { pageHeader, emptyState, paginateList, paginationHtml, bindPagination } from '../ui.js';
 import { requireRole } from '../guards.js';
 
 /* FR-7.1: Kelola Jadwal & Kuota Donor */
@@ -22,11 +22,15 @@ export async function viewJadwal() {
           <tbody><tr><td colspan="7"><div class="skeleton" style="height:20px;"></div></td></tr></tbody>
         </table>
       </div>
+      <div id="jadwal-pagination-slot" style="margin-top:14px;"></div>
     </div>
   `;
 
   const tbody = document.querySelector('#tbl-jadwal tbody');
+  const paginasiSlot = document.getElementById('jadwal-pagination-slot');
   let lokasiCache = [];
+  let halamanJadwal = 1;
+  let daftarJadwalTerakhir = [];
 
   async function loadLokasiCache() {
     try {
@@ -37,29 +41,52 @@ export async function viewJadwal() {
 
   async function load(filter = {}) {
     tbody.innerHTML = `<tr><td colspan="7"><div class="skeleton" style="height:20px;"></div></td></tr>`;
+    paginasiSlot.innerHTML = '';
     try {
       const res = await Api.adminJadwalList(filter);
-      const list = res.data || [];
-      tbody.innerHTML = list.length ? list.map((j) => `
-        <tr>
-          <td class="mono">#${j.id_jadwal}</td>
-          <td>${escapeHtml(j.nama_lokasi || ('Lokasi #' + j.id_lokasi))}</td>
-          <td>${escapeHtml(j.tanggal)}</td>
-          <td>${escapeHtml(j.slot_waktu)}</td>
-          <td>${j.kuota_tersisa ?? '-'} / ${j.kuota_total}</td>
-          <td><span class="badge ${j.status === 'aktif' || !j.status ? 'badge--aktif' : 'badge--nonaktif'}"><i class="badge-dot"></i>${escapeHtml(j.status || 'aktif')}</span></td>
-          <td style="white-space:nowrap;">
-            <button class="btn btn-ghost btn-sm" data-edit="${j.id_jadwal}">Ubah</button>
-            <button class="btn btn-danger btn-sm" data-hapus="${j.id_jadwal}">Batalkan</button>
-          </td>
-        </tr>
-      `).join('') : `<tr><td colspan="7" class="muted" style="padding:24px;">Belum ada jadwal.</td></tr>`;
-
-      tbody.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => openModal(list.find((x) => String(x.id_jadwal) === b.dataset.edit))));
-      tbody.querySelectorAll('[data-hapus]').forEach((b) => b.addEventListener('click', () => hapus(b.dataset.hapus)));
+      daftarJadwalTerakhir = res.data || [];
+      halamanJadwal = 1;
+      renderTabelJadwal();
     } catch (e) {
       tbody.innerHTML = `<tr><td colspan="7"><div class="alert alert-error">${escapeHtml(e.message)}</div></td></tr>`;
     }
+  }
+
+  function renderTabelJadwal() {
+    const list = daftarJadwalTerakhir;
+
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="7">${emptyState('Belum ada jadwal.')}</td></tr>`;
+      paginasiSlot.innerHTML = '';
+      return;
+    }
+
+    const { items, page, totalPages } = paginateList(list, halamanJadwal);
+    halamanJadwal = page;
+
+    tbody.innerHTML = items.map((j) => `
+      <tr>
+        <td class="mono">#${j.id_jadwal}</td>
+        <td>${escapeHtml(j.nama_lokasi || ('Lokasi #' + j.id_lokasi))}</td>
+        <td>${escapeHtml(j.tanggal)}</td>
+        <td>${escapeHtml(j.slot_waktu)}</td>
+        <td>${j.kuota_tersisa ?? '-'} / ${j.kuota_total}</td>
+        <td><span class="badge ${j.status === 'aktif' || !j.status ? 'badge--aktif' : 'badge--nonaktif'}"><i class="badge-dot"></i>${escapeHtml(j.status || 'aktif')}</span></td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-ghost btn-sm" data-edit="${j.id_jadwal}">Ubah</button>
+          <button class="btn btn-danger btn-sm" data-hapus="${j.id_jadwal}">Batalkan</button>
+        </td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => openModal(list.find((x) => String(x.id_jadwal) === b.dataset.edit))));
+    tbody.querySelectorAll('[data-hapus]').forEach((b) => b.addEventListener('click', () => hapus(b.dataset.hapus)));
+
+    paginasiSlot.innerHTML = paginationHtml(page, totalPages);
+    bindPagination(paginasiSlot, (delta) => {
+      halamanJadwal += delta;
+      renderTabelJadwal();
+    });
   }
 
   async function hapus(id) {

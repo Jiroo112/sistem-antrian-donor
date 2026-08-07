@@ -2,7 +2,7 @@ import { app } from '../elements.js';
 import { escapeHtml, setLoading, renderAlertError } from '../../../js/shared/dom.js';
 import { fmtTanggal } from '../../../js/shared/format.js';
 import { Api } from '../../../js/api.js';
-import { pageHeader } from '../ui.js';
+import { pageHeader, emptyState, paginateList, paginationHtml, bindPagination } from '../ui.js';
 import { requireRole } from '../guards.js';
 
 /* FR-9.1: Dashboard Statistik Donor */
@@ -42,6 +42,7 @@ export async function viewDashboard() {
               <tbody><tr><td colspan="4"><div class="skeleton" style="height:20px;"></div></td></tr></tbody>
             </table>
           </div>
+          <div id="lokasi-pagination-slot" style="margin-top:14px;"></div>
         </div>
         <div>
           <h2 style="font-size:1.05rem;margin:0 0 10px;">Tren Harian</h2>
@@ -51,6 +52,7 @@ export async function viewDashboard() {
               <tbody><tr><td colspan="3"><div class="skeleton" style="height:20px;"></div></td></tr></tbody>
             </table>
           </div>
+          <div id="harian-pagination-slot" style="margin-top:14px;"></div>
         </div>
       </div>
     </div>
@@ -64,6 +66,10 @@ export async function viewDashboard() {
   const btnTerapkan = document.getElementById('btn-terapkan');
   const tbodyLokasi = document.querySelector('#tbl-lokasi tbody');
   const tbodyHarian = document.querySelector('#tbl-harian tbody');
+  const paginasiLokasiSlot = document.getElementById('lokasi-pagination-slot');
+  const paginasiHarianSlot = document.getElementById('harian-pagination-slot');
+  let halamanLokasi = 1;
+  let halamanHarian = 1;
 
   function kartu(label, nilai) {
     return `
@@ -84,25 +90,62 @@ export async function viewDashboard() {
       </div>`;
   }
 
+  let daftarPerLokasi = [];
+  let daftarPerHari = [];
+
   function renderPerLokasi(list) {
-    tbodyLokasi.innerHTML = list.length ? list.map((l) => `
+    daftarPerLokasi = list;
+
+    if (!list.length) {
+      tbodyLokasi.innerHTML = `<tr><td colspan="4">${emptyState('Belum ada data untuk filter ini.')}</td></tr>`;
+      paginasiLokasiSlot.innerHTML = '';
+      return;
+    }
+
+    const { items, page, totalPages } = paginateList(list, halamanLokasi);
+    halamanLokasi = page;
+
+    tbodyLokasi.innerHTML = items.map((l) => `
       <tr>
         <td>${escapeHtml(l.nama_lokasi)}</td>
         <td class="mono">${l.jumlah_pendaftar}</td>
         <td class="mono">${l.jumlah_kehadiran}</td>
         <td class="mono">${l.jumlah_dibatalkan}</td>
       </tr>
-    `).join('') : `<tr><td colspan="4" class="muted" style="padding:24px;">Belum ada data.</td></tr>`;
+    `).join('');
+
+    paginasiLokasiSlot.innerHTML = paginationHtml(page, totalPages);
+    bindPagination(paginasiLokasiSlot, (delta) => {
+      halamanLokasi += delta;
+      renderPerLokasi(daftarPerLokasi);
+    });
   }
 
   function renderPerHari(list) {
-    tbodyHarian.innerHTML = list.length ? list.map((h) => `
+    daftarPerHari = list;
+
+    if (!list.length) {
+      tbodyHarian.innerHTML = `<tr><td colspan="3">${emptyState('Belum ada data untuk filter ini.')}</td></tr>`;
+      paginasiHarianSlot.innerHTML = '';
+      return;
+    }
+
+    const { items, page, totalPages } = paginateList(list, halamanHarian);
+    halamanHarian = page;
+
+    tbodyHarian.innerHTML = items.map((h) => `
       <tr>
         <td>${escapeHtml(fmtTanggal(h.tanggal))}</td>
         <td class="mono">${h.jumlah_pendaftar}</td>
         <td class="mono">${h.jumlah_kehadiran}</td>
       </tr>
-    `).join('') : `<tr><td colspan="3" class="muted" style="padding:24px;">Belum ada data.</td></tr>`;
+    `).join('');
+
+    paginasiHarianSlot.innerHTML = paginationHtml(page, totalPages);
+    bindPagination(paginasiHarianSlot, (delta) => {
+      halamanHarian += delta;
+      renderPerHari(daftarPerHari);
+    });
   }
 
   async function loadLokasiOptions() {
@@ -117,6 +160,8 @@ export async function viewDashboard() {
   async function load() {
     alertSlot.innerHTML = '';
     setLoading(btnTerapkan, true);
+    halamanLokasi = 1;
+    halamanHarian = 1;
     const filter = {
       id_lokasi: selectLokasi.value,
       tanggal_mulai: inputMulai.value,

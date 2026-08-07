@@ -1,7 +1,7 @@
 import { app } from '../elements.js';
 import { el, escapeHtml, setLoading, toast, renderAlertError } from '../../../js/shared/dom.js';
 import { Api } from '../../../js/api.js';
-import { pageHeader } from '../ui.js';
+import { pageHeader, emptyState, paginateList, paginationHtml, bindPagination } from '../ui.js';
 import { requireRole } from '../guards.js';
 import { getCurrentUser } from '../session.js';
 
@@ -37,35 +37,62 @@ export async function viewPengguna() {
           <tbody><tr><td colspan="5"><div class="skeleton" style="height:20px;"></div></td></tr></tbody>
         </table>
       </div>
+      <div id="pengguna-pagination-slot" style="margin-top:14px;"></div>
     </div>
   `;
 
   const tbody = document.querySelector('#tbl-pengguna tbody');
+  const paginasiSlot = document.getElementById('pengguna-pagination-slot');
   const filterPeran = document.getElementById('filter-peran');
+  let halamanPengguna = 1;
+  let daftarPenggunaTerakhir = [];
 
   async function load(filter = {}) {
     tbody.innerHTML = `<tr><td colspan="5"><div class="skeleton" style="height:20px;"></div></td></tr>`;
+    paginasiSlot.innerHTML = '';
     try {
       const res = await Api.adminPenggunaList(filter);
-      const list = res.data || [];
-      tbody.innerHTML = list.length ? list.map((u) => `
-        <tr>
-          <td>${escapeHtml(u.nama)}</td>
-          <td>${escapeHtml(u.email)}</td>
-          <td>${escapeHtml(LABEL_PERAN[u.peran] || u.peran)}</td>
-          <td><span class="badge ${u.status_akun === 'aktif' ? 'badge--aktif' : 'badge--nonaktif'}"><i class="badge-dot"></i>${escapeHtml(u.status_akun)}</span></td>
-          <td style="white-space:nowrap;">
-            <button class="btn btn-ghost btn-sm" data-edit="${u.id_pengguna}">Ubah</button>
-            ${String(u.id_pengguna) === String(idSaya) ? '' : `<button class="btn btn-danger btn-sm" data-nonaktifkan="${u.id_pengguna}">Nonaktifkan</button>`}
-          </td>
-        </tr>
-      `).join('') : `<tr><td colspan="5" class="muted" style="padding:24px;">Belum ada pengguna internal.</td></tr>`;
-
-      tbody.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => openModal(list.find((x) => String(x.id_pengguna) === b.dataset.edit))));
-      tbody.querySelectorAll('[data-nonaktifkan]').forEach((b) => b.addEventListener('click', () => nonaktifkan(b.dataset.nonaktifkan)));
+      daftarPenggunaTerakhir = res.data || [];
+      halamanPengguna = 1;
+      renderTabelPengguna();
     } catch (e) {
       tbody.innerHTML = `<tr><td colspan="5"><div class="alert alert-error">${escapeHtml(e.message)}</div></td></tr>`;
     }
+  }
+
+  function renderTabelPengguna() {
+    const list = daftarPenggunaTerakhir;
+
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="5">${emptyState('Belum ada pengguna internal.')}</td></tr>`;
+      paginasiSlot.innerHTML = '';
+      return;
+    }
+
+    const { items, page, totalPages } = paginateList(list, halamanPengguna);
+    halamanPengguna = page;
+
+    tbody.innerHTML = items.map((u) => `
+      <tr>
+        <td>${escapeHtml(u.nama)}</td>
+        <td>${escapeHtml(u.email)}</td>
+        <td>${escapeHtml(LABEL_PERAN[u.peran] || u.peran)}</td>
+        <td><span class="badge ${u.status_akun === 'aktif' ? 'badge--aktif' : 'badge--nonaktif'}"><i class="badge-dot"></i>${escapeHtml(u.status_akun)}</span></td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-ghost btn-sm" data-edit="${u.id_pengguna}">Ubah</button>
+          ${String(u.id_pengguna) === String(idSaya) ? '' : `<button class="btn btn-danger btn-sm" data-nonaktifkan="${u.id_pengguna}">Nonaktifkan</button>`}
+        </td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => openModal(list.find((x) => String(x.id_pengguna) === b.dataset.edit))));
+    tbody.querySelectorAll('[data-nonaktifkan]').forEach((b) => b.addEventListener('click', () => nonaktifkan(b.dataset.nonaktifkan)));
+
+    paginasiSlot.innerHTML = paginationHtml(page, totalPages);
+    bindPagination(paginasiSlot, (delta) => {
+      halamanPengguna += delta;
+      renderTabelPengguna();
+    });
   }
 
   async function nonaktifkan(id) {

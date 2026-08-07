@@ -2,7 +2,7 @@ import { app } from '../elements.js';
 import { el, escapeHtml, setLoading, toast } from '../../../js/shared/dom.js';
 import { statusBadgeClass, labelStatusAntrian } from '../../../js/shared/format.js';
 import { Api } from '../../../js/api.js';
-import { pageHeader } from '../ui.js';
+import { pageHeader, emptyState, paginateList, paginationHtml, bindPagination } from '../ui.js';
 import { requireRole } from '../guards.js';
 import { BASE_PATH } from '../router.js';
 
@@ -58,6 +58,7 @@ export async function viewAntrian() {
             <tbody><tr><td colspan="5"><div class="skeleton" style="height:20px;"></div></td></tr></tbody>
           </table>
         </div>
+        <div id="antrian-pagination-slot" style="margin-top:14px;"></div>
         <div id="selesai-form-slot" style="margin-top:16px;"></div>
       </div>
     </div>
@@ -68,6 +69,7 @@ export async function viewAntrian() {
   const jadwalAktifWrap = document.getElementById('jadwal-aktif-wrap');
   const ringkasanSlot = document.getElementById('ringkasan-slot');
   const tbody = document.querySelector('#tbl-antrian tbody');
+  const paginasiSlot = document.getElementById('antrian-pagination-slot');
   const inputCheckin = document.getElementById('input-checkin');
   const btnCheckin = document.getElementById('btn-checkin');
   const btnPanggilBerikutnya = document.getElementById('btn-panggil-berikutnya');
@@ -77,6 +79,8 @@ export async function viewAntrian() {
 
   let idJadwalTerpilih = null;
   let sedangMemuat = false;
+  let halamanAntrian = 1;
+  let daftarAntrianTerakhir = [];
   // Dicek tiap poll: kalau true, lewati refresh tabel supaya form kelayakan
   // yang lagi dibuka petugas (FR-8.x: hasil_donor) tidak tiba-tiba berubah
   // di bawah tangan mereka -- pola sama seperti sedangIsiFormJadwalUlang di
@@ -154,12 +158,19 @@ export async function viewAntrian() {
   }
 
   function renderTabel(list) {
+    daftarAntrianTerakhir = list;
+
     if (!list.length) {
-      tbody.innerHTML = `<tr><td colspan="5" class="muted" style="padding:24px;">Belum ada antrian untuk jadwal ini.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5">${emptyState('Belum ada antrian untuk jadwal ini.')}</td></tr>`;
+      paginasiSlot.innerHTML = '';
       return;
     }
+
+    const { items, page, totalPages } = paginateList(list, halamanAntrian);
+    halamanAntrian = page;
+
     tbody.innerHTML = '';
-    list.forEach((a) => {
+    items.forEach((a) => {
       tbody.appendChild(el(`
         <tr>
           <td class="mono">${String(a.nomor_urut).padStart(3, '0')}</td>
@@ -174,6 +185,12 @@ export async function viewAntrian() {
     tbody.querySelectorAll('[data-panggil]').forEach((b) => b.addEventListener('click', () => aksiPanggil(b, b.dataset.panggil)));
     tbody.querySelectorAll('[data-lewati]').forEach((b) => b.addEventListener('click', () => aksiLewati(b, b.dataset.lewati)));
     tbody.querySelectorAll('[data-selesai]').forEach((b) => b.addEventListener('click', () => aksiSelesai(b, b.dataset.selesai)));
+
+    paginasiSlot.innerHTML = paginationHtml(page, totalPages);
+    bindPagination(paginasiSlot, (delta) => {
+      halamanAntrian += delta;
+      renderTabel(daftarAntrianTerakhir);
+    });
   }
 
   function renderAksiButtons(a) {
@@ -315,6 +332,7 @@ export async function viewAntrian() {
 
   selectJadwal.addEventListener('change', () => {
     idJadwalTerpilih = selectJadwal.value || null;
+    halamanAntrian = 1;
     updateLinkPapanAntrian();
     if (idJadwalTerpilih) loadAntrian();
   });

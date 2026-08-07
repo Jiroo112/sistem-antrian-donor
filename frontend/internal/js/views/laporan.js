@@ -2,7 +2,7 @@ import { app } from '../elements.js';
 import { escapeHtml, setLoading, toast, renderAlertError } from '../../../js/shared/dom.js';
 import { fmtTanggal, fmtTanggalWaktu, statusBadgeClass, labelStatusAntrian } from '../../../js/shared/format.js';
 import { Api } from '../../../js/api.js';
-import { pageHeader } from '../ui.js';
+import { pageHeader, emptyState, paginateList, paginationHtml, bindPagination } from '../ui.js';
 import { requireRole } from '../guards.js';
 
 /**
@@ -55,6 +55,7 @@ export async function viewLaporan() {
           <tbody><tr><td colspan="10"><div class="skeleton" style="height:20px;"></div></td></tr></tbody>
         </table>
       </div>
+      <div id="laporan-pagination-slot" class="no-print" style="margin-top:14px;"></div>
     </div>
   `;
 
@@ -67,6 +68,9 @@ export async function viewLaporan() {
   const btnUnduh = document.getElementById('btn-unduh');
   const btnCetak = document.getElementById('btn-cetak');
   const tbody = document.querySelector('#tbl-laporan tbody');
+  const paginasiSlot = document.getElementById('laporan-pagination-slot');
+  let halamanLaporan = 1;
+  let daftarLaporanTerakhir = [];
 
   function currentFilter() {
     return {
@@ -85,9 +89,8 @@ export async function viewLaporan() {
     } catch (_) { /* filter lokasi opsional, biarkan default "Semua lokasi" kalau gagal dimuat */ }
   }
 
-  function renderTabel(list) {
-    ringkasanJumlah.textContent = `${list.length} baris data`;
-    tbody.innerHTML = list.length ? list.map((row) => `
+  function barisHtml(list) {
+    return list.map((row) => `
       <tr>
         <td class="mono">${String(row.nomor_urut).padStart(3, '0')}</td>
         <td>${escapeHtml(row.nama_pendonor)}</td>
@@ -100,12 +103,51 @@ export async function viewLaporan() {
         <td>${escapeHtml(fmtTanggalWaktu(row.waktu_checkin))}</td>
         <td>${escapeHtml(fmtTanggalWaktu(row.waktu_selesai))}</td>
       </tr>
-    `).join('') : `<tr><td colspan="10" class="muted" style="padding:24px;">Belum ada data untuk filter ini.</td></tr>`;
+    `).join('');
   }
+
+  function renderTabel(list) {
+    daftarLaporanTerakhir = list;
+    ringkasanJumlah.textContent = `${list.length} baris data`;
+
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="10">${emptyState('Belum ada data untuk filter ini.')}</td></tr>`;
+      paginasiSlot.innerHTML = '';
+      return;
+    }
+
+    const { items, page, totalPages } = paginateList(list, halamanLaporan);
+    halamanLaporan = page;
+
+    tbody.innerHTML = barisHtml(items);
+
+    paginasiSlot.innerHTML = paginationHtml(page, totalPages);
+    bindPagination(paginasiSlot, (delta) => {
+      halamanLaporan += delta;
+      renderTabel(daftarLaporanTerakhir);
+    });
+  }
+
+  // "Cetak / Simpan PDF" harus mencetak SELURUH data hasil filter, bukan
+  // cuma halaman yang lagi tampil di layar -- tabel disuntik penuh sesaat
+  // sebelum dialog cetak dibuka, lalu dikembalikan ke tampilan berhalaman
+  // sesudahnya. Guard document.body.contains() jaga-jaga kalau event ini
+  // sempat menyala setelah petugas pindah halaman lain.
+  function tampilkanSemuaUntukCetak() {
+    if (!document.body.contains(tbody) || !daftarLaporanTerakhir.length) return;
+    tbody.innerHTML = barisHtml(daftarLaporanTerakhir);
+  }
+  function kembalikanTampilanBerhalaman() {
+    if (!document.body.contains(tbody)) return;
+    renderTabel(daftarLaporanTerakhir);
+  }
+  window.addEventListener('beforeprint', tampilkanSemuaUntukCetak);
+  window.addEventListener('afterprint', kembalikanTampilanBerhalaman);
 
   async function load() {
     alertSlot.innerHTML = '';
     setLoading(btnTerapkan, true);
+    halamanLaporan = 1;
     try {
       const res = await Api.adminLaporanList(currentFilter());
       renderTabel(res.data.data || []);

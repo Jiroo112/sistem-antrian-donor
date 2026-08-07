@@ -19,4 +19,5 @@ export const icons = {
   pengguna: svg('<circle cx="9" cy="8" r="4"/><path d="M2 21v-1a7 7 0 0 1 14 0v1"/><circle cx="18" cy="8" r="3"/><path d="M22 21v-1a5.5 5.5 0 0 0-4-5.3"/>'),
   masuk: svg('<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/>'),
   keluar: svg('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>'),
+  kosong: svg('<path d="M3 9.5 5.5 4h13L21 9.5"/><path d="M3 9.5v9A2 2 0 0 0 5 20.5h14a2 2 0 0 0 2-2v-9"/><path d="M3 9.5h18"/><path d="M9.5 13h5"/>'),
 };

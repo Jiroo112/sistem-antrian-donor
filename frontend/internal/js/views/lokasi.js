@@ -1,7 +1,7 @@
 import { app } from '../elements.js';
 import { el, escapeHtml, setLoading, toast, renderAlertError } from '../../../js/shared/dom.js';
 import { Api } from '../../../js/api.js';
-import { pageHeader } from '../ui.js';
+import { pageHeader, emptyState, paginateList, paginationHtml, bindPagination } from '../ui.js';
 import { requireRole } from '../guards.js';
 
 /* FR-7.4: Kelola Lokasi Donor */
@@ -19,35 +19,62 @@ export async function viewLokasi() {
           <tbody><tr><td colspan="6"><div class="skeleton" style="height:20px;"></div></td></tr></tbody>
         </table>
       </div>
+      <div id="lokasi-pagination-slot" style="margin-top:14px;"></div>
     </div>
   `;
 
   const tbody = document.querySelector('#tbl-lokasi tbody');
+  const paginasiSlot = document.getElementById('lokasi-pagination-slot');
+  let halamanLokasi = 1;
+  let daftarLokasiTerakhir = [];
 
   async function load() {
     tbody.innerHTML = `<tr><td colspan="6"><div class="skeleton" style="height:20px;"></div></td></tr>`;
+    paginasiSlot.innerHTML = '';
     try {
       const res = await Api.adminLokasiList();
-      const list = res.data || [];
-      tbody.innerHTML = list.length ? list.map((l) => `
-        <tr>
-          <td>${escapeHtml(l.nama_lokasi)}</td>
-          <td><span class="badge ${l.jenis === 'mobile_unit' ? 'badge--info' : 'badge--aktif'}">${l.jenis === 'mobile_unit' ? 'Unit Bergerak' : 'UDD Tetap'}</span></td>
-          <td>${escapeHtml(l.alamat)}</td>
-          <td class="mono muted">${l.latitude && l.longitude ? `${l.latitude}, ${l.longitude}` : '-'}</td>
-          <td><span class="badge ${l.status_lokasi === 'nonaktif' ? 'badge--nonaktif' : 'badge--aktif'}"><i class="badge-dot"></i>${escapeHtml(l.status_lokasi || 'aktif')}</span></td>
-          <td style="white-space:nowrap;">
-            <button class="btn btn-ghost btn-sm" data-edit="${l.id_lokasi}">Ubah</button>
-            <button class="btn btn-danger btn-sm" data-hapus="${l.id_lokasi}">Nonaktifkan</button>
-          </td>
-        </tr>
-      `).join('') : `<tr><td colspan="6" class="muted" style="padding:24px;">Belum ada lokasi.</td></tr>`;
-
-      tbody.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => openModal(list.find((x) => String(x.id_lokasi) === b.dataset.edit))));
-      tbody.querySelectorAll('[data-hapus]').forEach((b) => b.addEventListener('click', () => hapus(b.dataset.hapus)));
+      daftarLokasiTerakhir = res.data || [];
+      halamanLokasi = 1;
+      renderTabelLokasi();
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="5"><div class="alert alert-error">${escapeHtml(e.message)}</div></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6"><div class="alert alert-error">${escapeHtml(e.message)}</div></td></tr>`;
     }
+  }
+
+  function renderTabelLokasi() {
+    const list = daftarLokasiTerakhir;
+
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="6">${emptyState('Belum ada lokasi.')}</td></tr>`;
+      paginasiSlot.innerHTML = '';
+      return;
+    }
+
+    const { items, page, totalPages } = paginateList(list, halamanLokasi);
+    halamanLokasi = page;
+
+    tbody.innerHTML = items.map((l) => `
+      <tr>
+        <td>${escapeHtml(l.nama_lokasi)}</td>
+        <td><span class="badge ${l.jenis === 'mobile_unit' ? 'badge--info' : 'badge--aktif'}">${l.jenis === 'mobile_unit' ? 'Unit Bergerak' : 'UDD Tetap'}</span></td>
+        <td>${escapeHtml(l.alamat)}</td>
+        <td class="mono muted">${l.latitude && l.longitude ? `${l.latitude}, ${l.longitude}` : '-'}</td>
+        <td><span class="badge ${l.status_lokasi === 'nonaktif' ? 'badge--nonaktif' : 'badge--aktif'}"><i class="badge-dot"></i>${escapeHtml(l.status_lokasi || 'aktif')}</span></td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-ghost btn-sm" data-edit="${l.id_lokasi}">Ubah</button>
+          <button class="btn btn-danger btn-sm" data-hapus="${l.id_lokasi}">Nonaktifkan</button>
+        </td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => openModal(list.find((x) => String(x.id_lokasi) === b.dataset.edit))));
+    tbody.querySelectorAll('[data-hapus]').forEach((b) => b.addEventListener('click', () => hapus(b.dataset.hapus)));
+
+    paginasiSlot.innerHTML = paginationHtml(page, totalPages);
+    bindPagination(paginasiSlot, (delta) => {
+      halamanLokasi += delta;
+      renderTabelLokasi();
+    });
   }
 
   async function hapus(id) {
