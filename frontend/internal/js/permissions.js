@@ -13,12 +13,12 @@
  * logika di tiga tempat itu.
  */
 export const NAV_ITEMS = [
-  { route: '/antrian', label: 'Panggil Antrian', roles: ['petugas_loket', 'super_admin'] },
-  { route: '/jadwal', label: 'Kelola Jadwal', roles: ['admin_udd', 'super_admin'] },
-  { route: '/lokasi', label: 'Kelola Lokasi', roles: ['admin_udd', 'super_admin'] },
-  { route: '/dashboard', label: 'Dashboard', roles: ['admin_udd', 'super_admin'] },
-  { route: '/laporan', label: 'Laporan', roles: ['admin_udd', 'super_admin'] },
-  { route: '/pengguna', label: 'Pengguna Internal', roles: ['super_admin'] },
+  { route: '/antrian', label: 'Panggil Antrian', icon: 'antrian', roles: ['petugas_loket', 'super_admin'] },
+  { route: '/jadwal', label: 'Kelola Jadwal', icon: 'jadwal', roles: ['admin_udd', 'super_admin'] },
+  { route: '/lokasi', label: 'Kelola Lokasi', icon: 'lokasi', roles: ['admin_udd', 'super_admin'] },
+  { route: '/dashboard', label: 'Dashboard', icon: 'dashboard', roles: ['admin_udd', 'super_admin'] },
+  { route: '/laporan', label: 'Laporan', icon: 'laporan', roles: ['admin_udd', 'super_admin'] },
+  { route: '/pengguna', label: 'Pengguna Internal', icon: 'pengguna', roles: ['super_admin'] },
 ];
 
 const DEFAULT_ROUTE_BY_ROLE = {

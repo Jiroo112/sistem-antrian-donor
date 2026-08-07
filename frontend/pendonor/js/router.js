@@ -17,7 +17,6 @@ import { viewLupaPassword } from './views/lupa-password.js';
 import { viewResetPassword } from './views/reset-password.js';
 import { viewDashboard } from './views/dashboard.js';
 import { viewProfil } from './views/profil.js';
-import { viewKuesioner } from './views/kuesioner.js';
 import { viewKartuDonor } from './views/kartu-donor.js';
 import { viewPerangkat } from './views/perangkat.js';
 
@@ -67,7 +66,6 @@ const routes = {
   '/reset-password': viewResetPassword,
   '/dashboard': viewDashboard,
   '/profil': viewProfil,
-  '/kuesioner': viewKuesioner,
   '/kartu-donor': viewKartuDonor,
   '/perangkat': viewPerangkat,
 };

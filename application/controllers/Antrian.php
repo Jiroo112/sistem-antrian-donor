@@ -72,6 +72,11 @@ class Antrian extends MY_Controller {
             'id_antrian'          => $antrian->id_antrian,
             'nomor_urut'          => $antrian->nomor_urut,
             'status'              => $antrian->status,
+            // FR-2.2: snapshot hasil self-assessment kesehatan SAAT nomor
+            // ini diambil -- dipakai buat nampilin "tanda" di e-ticket
+            // pendonor maupun daftar antrian petugas (admin\Antrian_model
+            // get_for_petugas() ikut nge-select ini lewat antrian.*).
+            'hasil_screening_kesehatan' => $antrian->hasil_screening_kesehatan,
             'qr_code'             => $antrian->qr_code,
             'batas_waktu_checkin' => $antrian->batas_waktu_checkin,
             // Dipakai frontend (antrian-alert.js) buat mendeteksi "panggil
@@ -108,11 +113,13 @@ class Antrian extends MY_Controller {
     }
 
     /**
-     * FR-4.1 + FR-4.2 + FR-4.3: ambil nomor antrian online untuk jadwal
-     * tertentu -- sistem langsung menerbitkan e-ticket (QR code) dan
-     * menetapkan batas waktu check-in.
+     * FR-4.1 + FR-4.2 + FR-4.3 + FR-2.2: ambil nomor antrian online untuk
+     * jadwal tertentu -- sistem langsung menerbitkan e-ticket (QR code),
+     * menetapkan batas waktu check-in, DAN memproses kuesioner kesehatan
+     * pra-donor yang diisi bareng di request yang sama (bukan halaman
+     * /kuesioner terpisah lagi).
      * POST /antrian
-     * Body: id_jadwal
+     * Body: id_jadwal, jawaban ({ "kondisi_sehat": "ya", ... })
      */
     public function ambil()
     {
@@ -135,24 +142,16 @@ class Antrian extends MY_Controller {
             return;
         }
 
-        // FR-2.2: kuesioner kesehatan pra-donor wajib diisi dulu sebelum
-        // pendonor bisa mengambil nomor antrian (sesuai SPO skrining PMI).
-        $riwayat = $this->Riwayat_kesehatan_model->get_latest_by_pendonor($id_pendonor);
-        if (!$riwayat || empty($riwayat->hasil_kuesioner)) {
-            json_response(422, 'error', 'Lengkapi kuesioner kesehatan pra-donor terlebih dahulu sebelum mengambil nomor antrian');
-            return;
-        }
-
-        // BR2: interval minimal 3 bulan sejak donor terakhir
+        // BR2 & BR3 dicek DULUAN sebelum kuesioner (bukan setelah) -- supaya
+        // pendonor tidak capek-capek isi 7 pertanyaan kesehatan cuma buat
+        // ditolak beberapa detik kemudian gara-gara alasan yang sama sekali
+        // tidak berhubungan (interval belum cukup / sudah ada antrian aktif).
         $boleh_lagi_pada = $this->cek_interval_donor($id_pendonor);
         if ($boleh_lagi_pada) {
             json_response(422, 'error', 'Belum memenuhi interval minimal donor darah, silakan daftar kembali mulai ' . $boleh_lagi_pada);
             return;
         }
 
-        // BR3: satu akun cuma boleh punya 1 antrian aktif dalam satu waktu.
-        // expire_overdue() dulu supaya antrian lama yang sudah hangus (FR-4.3)
-        // tidak keliru dianggap masih aktif dan memblokir pendaftaran baru.
         $this->Antrian_model->expire_overdue($id_pendonor);
         $existing = $this->Antrian_model->get_active_by_pendonor($id_pendonor);
         if ($existing) {
@@ -162,6 +161,61 @@ class Antrian extends MY_Controller {
             return;
         }
 
+        // FR-2.2: kuesioner kesehatan pra-donor sekarang diisi LANGSUNG di
+        // sini (bukan halaman /kuesioner terpisah lagi) -- jawabannya
+        // dikirim bareng id_jadwal dalam satu request yang sama, supaya
+        // self-assessment-nya benar-benar mencerminkan kondisi pendonor
+        // SAAT itu juga, bukan isian lama yang mungkin sudah basi.
+        $this->config->load('kuesioner_kesehatan');
+        $daftar_pertanyaan = $this->config->item('pertanyaan_kuesioner');
+        $jawaban = $this->input->post('jawaban');
+
+        if (!is_array($jawaban) || empty($jawaban)) {
+            json_response(422, 'error', 'Kuesioner kesehatan pra-donor wajib diisi sebelum mengambil nomor antrian', array(
+                'jawaban' => 'Jawaban kuesioner wajib diisi dalam bentuk object/array',
+            ));
+            return;
+        }
+
+        $error_tidak_lengkap = array();
+        $flag_risiko = array();
+        foreach ($daftar_pertanyaan as $pertanyaan) {
+            $kode = $pertanyaan['kode'];
+            if (!isset($jawaban[$kode]) || !in_array($jawaban[$kode], array('ya', 'tidak'), TRUE)) {
+                $error_tidak_lengkap[$kode] = 'Pertanyaan "' . $pertanyaan['teks'] . '" wajib dijawab ya/tidak';
+                continue;
+            }
+            if ($jawaban[$kode] === $pertanyaan['jawaban_berisiko']) {
+                $flag_risiko[] = $kode;
+            }
+        }
+        if (!empty($error_tidak_lengkap)) {
+            json_response(422, 'error', 'Lengkapi kuesioner kesehatan pra-donor', $error_tidak_lengkap);
+            return;
+        }
+
+        $hasil_screening_awal = empty($flag_risiko) ? 'lolos_screening_awal' : 'perlu_pemeriksaan_lanjutan';
+
+        // BR5: hasil self-assessment TIDAK memblokir pengambilan nomor
+        // antrian -- keputusan akhir kelayakan tetap di tangan petugas
+        // medis/skrining di lokasi, bukan di aplikasi. Kalau jawabannya
+        // mengarah ke "perlu_pemeriksaan_lanjutan", pendonor cuma diberi
+        // peringatan + ditandai di baris antrian-nya sendiri (lihat
+        // create_with_next_nomor() di bawah), bukan ditolak.
+        $peringatan_kesehatan = $hasil_screening_awal === 'perlu_pemeriksaan_lanjutan'
+            ? 'Berdasarkan self-assessment kesehatanmu, kamu mungkin memerlukan pemeriksaan lanjutan. Nomor antrian tetap diterbitkan, tapi keputusan akhir kelayakan donor ada di tangan petugas medis di lokasi.'
+            : null;
+
+        // Tetap direkam ke riwayat_kesehatan juga (data kesehatan umum
+        // pendonor yang dipakai halaman Profil) -- terpisah dari snapshot
+        // per-antrian yang baru dibuat di atas.
+        $this->Riwayat_kesehatan_model->simpan_kuesioner($id_pendonor, array(
+            'jawaban'              => $jawaban,
+            'flag_risiko'          => $flag_risiko,
+            'hasil_screening_awal' => $hasil_screening_awal,
+            'diisi_pada'           => date('Y-m-d H:i:s'),
+        ));
+
         // BR6: kuota tidak boleh dilampaui -- dikurangi atomik di sini
         // sebelum insert, supaya aman dari race condition antar request.
         if (!$this->Jadwal_model->kurangi_kuota($id_jadwal)) {
@@ -170,7 +224,7 @@ class Antrian extends MY_Controller {
         }
 
         $batas_waktu_checkin = $jadwal->tanggal . ' ' . $this->jam_akhir_slot($jadwal->slot_waktu) . ':00';
-        $id_antrian = $this->Antrian_model->create_with_next_nomor($id_pendonor, $id_jadwal, $batas_waktu_checkin);
+        $id_antrian = $this->Antrian_model->create_with_next_nomor($id_pendonor, $id_jadwal, $batas_waktu_checkin, $hasil_screening_awal);
 
         if (!$id_antrian) {
             // Gagal setelah kuota terlanjur dikurangi -- kembalikan supaya tidak hangus percuma
@@ -193,7 +247,9 @@ class Antrian extends MY_Controller {
             $antrian->batas_waktu_checkin
         ));
 
-        json_response(201, 'success', 'Nomor antrian berhasil diterbitkan', $this->format_e_ticket($antrian, $jadwal));
+        $data = $this->format_e_ticket($antrian, $jadwal);
+        $data['peringatan_kesehatan'] = $peringatan_kesehatan;
+        json_response(201, 'success', 'Nomor antrian berhasil diterbitkan', $data);
     }
 
     /**

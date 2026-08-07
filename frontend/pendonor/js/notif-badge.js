@@ -14,6 +14,7 @@
 import { Api, Auth } from '../../js/api.js';
 import { toast } from '../../js/shared/dom.js';
 import { routeHref } from './router.js';
+import { icons } from './icons.js';
 
 // NFR Performance: "pembaruan status antrian real-time maksimal jeda 5
 // detik" -- disamakan dengan interval antrian-alert.js supaya notifikasi
@@ -101,9 +102,12 @@ document.addEventListener('visibilitychange', () => {
 
 export function bellIconHtml() {
   return `
-    <a class="nav__link nav__bell" href="${routeHref('/notifikasi')}" data-route="/notifikasi" aria-label="Notifikasi" style="position:relative;display:inline-flex;align-items:center;">
-      <span aria-hidden="true">🔔</span>
-      <span id="notif-badge" class="notif-badge" style="display:none;"></span>
+    <a class="sidebar__link sidebar__link--bell" href="${routeHref('/notifikasi')}" data-route="/notifikasi" aria-label="Notifikasi">
+      <span class="sidebar__link-icon">
+        ${icons.bell}
+        <span id="notif-badge" class="notif-badge" style="display:none;"></span>
+      </span>
+      Notifikasi
     </a>
   `;
 }

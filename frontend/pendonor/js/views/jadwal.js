@@ -78,17 +78,7 @@ export async function viewJadwal() {
       `);
       const btnAmbil = node.querySelector('[data-ambil]');
       if (btnAmbil) {
-        btnAmbil.addEventListener('click', async () => {
-          setLoading(btnAmbil, true);
-          try {
-            await Api.ambilAntrian(j.id_jadwal);
-            toast('Nomor antrian berhasil diambil!', 'success');
-            navigate('/antrian');
-          } catch (err) {
-            toast(err.message, 'error');
-            setLoading(btnAmbil, false, 'Ambil Nomor Antrian');
-          }
-        });
+        btnAmbil.addEventListener('click', () => bukaFormKuesioner(j.id_jadwal, btnAmbil));
       }
       hasil.appendChild(node);
     });
@@ -103,4 +93,123 @@ export async function viewJadwal() {
   });
 
   loadJadwal();
+}
+
+// FR-2.2: kuesioner kesehatan pra-donor sekarang diisi LANGSUNG di sini,
+// tepat sebelum nomor antrian diambil (bukan halaman /kuesioner terpisah
+// lagi) -- supaya jawabannya selalu segar, bukan isian lama yang basi.
+// Ditampilkan sebagai modal (reuse .modal-backdrop/.modal yang sama dengan
+// modal "dipanggil" di antrian-alert.js) di atas daftar jadwal, BUKAN
+// navigasi ke halaman baru, supaya pendonor tidak kehilangan konteks jadwal
+// mana yang lagi mereka pilih.
+async function bukaFormKuesioner(idJadwal, btnAmbil) {
+  setLoading(btnAmbil, true);
+
+  let pertanyaan;
+  try {
+    const res = await Api.getKuesioner();
+    pertanyaan = res.data.pertanyaan;
+  } catch (err) {
+    toast(err.message, 'error');
+    setLoading(btnAmbil, false, 'Ambil Nomor Antrian');
+    return;
+  }
+
+  const backdrop = el(`
+    <div class="modal-backdrop">
+      <div class="modal" style="max-width:560px;text-align:left;">
+        <p class="eyebrow" style="margin-bottom:4px;">Kuesioner Kesehatan Pra-Donor</p>
+        <h2 style="margin:0 0 4px;font-size:1.2rem;">Sebelum ambil nomor antrian...</h2>
+        <p class="muted" style="margin:0 0 16px;">Jawab sesuai kondisimu saat ini -- ini cuma self-assessment awal, keputusan akhir kelayakan tetap di tangan petugas medis di lokasi.</p>
+        <div id="kuesioner-alert"></div>
+        <form id="form-kuesioner-inline">
+          <div id="kuesioner-list" class="stack" style="gap:14px;max-height:48vh;overflow-y:auto;padding-right:4px;margin-bottom:4px;">
+            ${pertanyaan.map((p) => `
+              <div class="field" style="margin-bottom:0;">
+                <label>${escapeHtml(p.teks)}</label>
+                <div class="radio-group">
+                  <label class="radio-pill" data-kode="${p.kode}"><input type="radio" name="q-${p.kode}" value="ya">Ya</label>
+                  <label class="radio-pill" data-kode="${p.kode}"><input type="radio" name="q-${p.kode}" value="tidak">Tidak</label>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div style="display:flex;gap:10px;margin-top:20px;">
+            <button type="button" class="btn btn-ghost" id="btn-batal-kuesioner" style="flex:1;">Batal</button>
+            <button type="submit" class="btn btn-primary" id="btn-submit-kuesioner" style="flex:2;">Ambil Nomor Antrian</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `);
+  document.body.appendChild(backdrop);
+  setLoading(btnAmbil, false, 'Ambil Nomor Antrian');
+
+  backdrop.querySelectorAll('.radio-pill').forEach((p) => {
+    p.addEventListener('click', () => {
+      const group = p.parentElement;
+      group.querySelectorAll('.radio-pill').forEach((x) => x.classList.remove('is-checked'));
+      p.classList.add('is-checked');
+    });
+  });
+
+  function tutupModal() {
+    backdrop.remove();
+  }
+  backdrop.querySelector('#btn-batal-kuesioner').addEventListener('click', tutupModal);
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) tutupModal();
+  });
+
+  const alertSlot = backdrop.querySelector('#kuesioner-alert');
+  backdrop.querySelector('#form-kuesioner-inline').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    alertSlot.innerHTML = '';
+
+    const jawaban = {};
+    for (const p of pertanyaan) {
+      const dipilih = backdrop.querySelector(`input[name="q-${p.kode}"]:checked`);
+      if (!dipilih) {
+        alertSlot.innerHTML = `<div class="alert alert-error">Semua pertanyaan wajib dijawab.</div>`;
+        return;
+      }
+      jawaban[p.kode] = dipilih.value;
+    }
+
+    const btnSubmit = backdrop.querySelector('#btn-submit-kuesioner');
+    setLoading(btnSubmit, true);
+    try {
+      const res = await Api.ambilAntrian(idJadwal, jawaban);
+      tutupModal();
+      toast('Nomor antrian berhasil diambil!', 'success');
+      // BR5: self-assessment kesehatan tidak memblokir pengambilan antrian
+      // (keputusan akhir tetap di petugas medis di lokasi), tapi kalau
+      // jawabannya berisiko, pendonor tetap perlu diberi tahu tegas --
+      // lihat Antrian::ambil() field peringatan_kesehatan.
+      if (res.data && res.data.peringatan_kesehatan) {
+        tampilkanPeringatanKesehatan(res.data.peringatan_kesehatan);
+      }
+      navigate('/antrian');
+    } catch (err) {
+      alertSlot.innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
+      setLoading(btnSubmit, false, 'Ambil Nomor Antrian');
+    }
+  });
+}
+
+// BR5: modal peringatan self-assessment kesehatan -- reuse komponen
+// .modal-backdrop/.modal yang sama dengan modal "dipanggil" (antrian-alert.js)
+// supaya pesannya tidak sekadar lewat sebagai toast dan gampang kelewat.
+function tampilkanPeringatanKesehatan(pesan) {
+  const backdrop = el(`
+    <div class="modal-backdrop">
+      <div class="modal" style="text-align:center;">
+        <p class="eyebrow" style="color:#B4232E;margin-bottom:6px;">⚠️ Perlu Diperhatikan</p>
+        <p style="margin:0 0 20px;">${escapeHtml(pesan)}</p>
+        <button class="btn btn-primary btn-block" id="btn-tutup-peringatan-kesehatan">Mengerti</button>
+      </div>
+    </div>
+  `);
+  document.body.appendChild(backdrop);
+  backdrop.querySelector('#btn-tutup-peringatan-kesehatan').addEventListener('click', () => backdrop.remove());
 }

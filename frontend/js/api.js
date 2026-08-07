@@ -195,12 +195,15 @@ export const Api = {
   // ---- Profil & Kesehatan (FR-2.x) ----
   getProfil: () => apiCall('profil', { method: 'GET', auth: 'pendonor' }),
   updateProfil: (data) => apiCall('profil', { method: 'PUT', body: data, auth: 'pendonor' }),
+  // getKuesioner cuma ambil daftar pertanyaan (dipakai form inline saat
+  // ambil nomor antrian, lihat views/jadwal.js) -- submit jawabannya
+  // sekarang jadi bagian dari ambilAntrian() di bawah, bukan endpoint
+  // sendiri lagi (FR-2.2 pindah dari halaman terpisah ke alur ambil antrian).
   getKuesioner: () => apiCall('profil/kuesioner', { method: 'GET', auth: 'pendonor' }),
-  submitKuesioner: (jawaban) => apiCall('profil/kuesioner', { method: 'POST', body: { jawaban }, auth: 'pendonor' }),
   kartuDonor: () => apiCall('profil/kartu-donor', { method: 'GET', auth: 'pendonor' }),
 
   // ---- Antrian (FR-4.x) ----
-  ambilAntrian: (id_jadwal) => apiCall('antrian', { method: 'POST', body: { id_jadwal }, auth: 'pendonor' }),
+  ambilAntrian: (id_jadwal, jawaban) => apiCall('antrian', { method: 'POST', body: { id_jadwal, jawaban }, auth: 'pendonor' }),
   antrianSaya: () => apiCall('antrian/saya', { method: 'GET', auth: 'pendonor' }),
   antrianDetail: (id) => apiCall(`antrian/${id}`, { method: 'GET', auth: 'pendonor' }),
   batalkanAntrian: (id) => apiCall(`antrian/${id}/batalkan`, { method: 'PUT', auth: 'pendonor' }),

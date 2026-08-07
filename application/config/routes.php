@@ -87,7 +87,6 @@ $route['api/lokasi/peta']['get'] = 'lokasi/peta';
 $route['api/profil']['get']             = 'profil/index';
 $route['api/profil']['put']             = 'profil/update';
 $route['api/profil/kuesioner']['get']   = 'profil/kuesioner_form';
-$route['api/profil/kuesioner']['post']  = 'profil/kuesioner_submit';
 $route['api/profil/kartu-donor']['get'] = 'profil/kartu_donor';
 
 // Modul 4.4: Pendaftaran Antrian Online (FR-4.1 - FR-4.4)

@@ -1,33 +1,39 @@
 /* =====================================================================
    Sistem Antrian Online Donor Darah — Design System
-   Motif: "tiket antrian" — kartu bertepi berlubang seperti tiket sobekan,
-   karena inti produk ini adalah nomor antrian & e-ticket QR code.
+   Fondasi visual mengikuti frontend/DESIGN.md (bahasa desain ala Airbnb):
+   kanvas putih bersih, aksen tunggal Rausch (#ff385c) untuk semua CTA
+   utama, tipografi Inter dengan bobot sedang, sudut lembut, dan satu
+   tingkat shadow saja -- diterapkan lewat variabel di bawah supaya
+   berlaku otomatis di semua halaman & role (pendonor, petugas loket,
+   admin UDD, super admin) tanpa perlu diubah satu-satu per file.
+   Motif "tiket antrian" (kartu bertepi berlubang) tetap dipertahankan
+   sebagai bentuk komponen -- cuma warnanya yang mengikuti palet baru.
    ===================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
 
 :root{
-  --crimson:      #A81F35;
-  --crimson-dark: #7E1729;
-  --crimson-tint: #F2DCD9;
-  --ink:          #201A1B;
-  --slate:        #5B5459;
-  --paper:        #FBF6F0;
-  --paper-raised: #FFFFFF;
-  --line:         #E7DCD5;
+  --crimson:      #ff385c; /* Rausch -- satu-satunya aksen brand */
+  --crimson-dark: #e00b41; /* state aktif/tekan */
+  --crimson-tint: #ffd1da; /* tint pucat -- badge, hover lembut, nomor step */
+  --ink:          #222222;
+  --slate:        #6a6a6a;
+  --paper:        #fff5f6; /* kanvas konten utama -- tint pink lembut, beda dari sidebar/card putih */
+  --paper-raised: #ffffff;
+  --line:         #dddddd;
   --success:      #2F6F4E;
   --success-tint: #DEEDE3;
   --amber:        #B8752B;
   --amber-tint:   #F5E6D2;
 
-  --font-display: 'Fraunces', Georgia, serif;
+  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
 
   --radius-s: 8px;
   --radius-m: 14px;
-  --radius-l: 22px;
-  --shadow-card: 0 1px 2px rgba(32,26,27,.04), 0 8px 24px -12px rgba(32,26,27,.18);
+  --radius-l: 16px;
+  --shadow-card: rgba(0,0,0,.02) 0 0 0 1px, rgba(0,0,0,.04) 0 2px 6px 0, rgba(0,0,0,.1) 0 4px 8px 0;
 }
 
 *{ box-sizing:border-box; }
@@ -64,8 +70,7 @@ button, input, select, textarea{ font-family:inherit; font-size:inherit; }
 
 .topbar{
   position:sticky; top:0; z-index:40;
-  background:rgba(251,246,240,.92);
-  backdrop-filter:blur(8px);
+  background:#ffffff;
   border-bottom:1px solid var(--line);
 }
 .topbar__inner{
@@ -91,24 +96,24 @@ button, input, select, textarea{ font-family:inherit; font-size:inherit; }
 .nav__link:hover{ color:var(--ink); background:var(--crimson-tint); }
 .nav__link.is-active{ color:var(--crimson-dark); background:var(--crimson-tint); }
 
-/* FR-6.x: bell notifikasi navbar (lihat frontend/pendonor/js/notif-badge.js) */
-.nav__bell{ font-size:1.1rem; padding:8px 12px; }
+/* FR-6.x: bell notifikasi sidebar (lihat frontend/pendonor/js/notif-badge.js) */
 .notif-badge{
-  position:absolute; top:2px; right:2px; min-width:16px; height:16px; padding:0 3px;
+  position:absolute; top:-4px; right:-6px; min-width:16px; height:16px; padding:0 3px;
   border-radius:100px; background:var(--crimson); color:#fff;
   font-family:var(--font-body); font-size:.62rem; font-weight:700; line-height:16px;
   text-align:center;
 }
 
-/* ---------- sidebar (peran super_admin -- lihat frontend/internal/js/nav.js) ----------
-   Markup selalu ada di admin_shell.php, tapi disembunyikan (display:none)
-   sampai nav.js menandai <body class="layout-sidebar"> untuk pengguna yang
-   login sebagai super_admin. Untuk peran lain, topbar/.nav di atas yang dipakai. */
+/* ---------- sidebar (pendonor SELALU pakai ini -- lihat pendonor_shell.php;
+   panel internal cuma untuk peran super_admin, lihat frontend/internal/js/nav.js) ----------
+   Markup admin_shell.php selalu ada di DOM tapi disembunyikan (display:none)
+   sampai nav.js menandai <body class="layout-sidebar">; peran internal
+   lain pakai topbar/.nav di atas. */
 .sidebar{
   display:none;
   position:fixed; top:0; left:0; bottom:0; width:248px;
   flex-direction:column;
-  background:var(--paper-raised);
+  background:#ffffff;
   border-right:1px solid var(--line);
   padding:20px 14px;
   overflow-y:auto;
@@ -117,18 +122,21 @@ button, input, select, textarea{ font-family:inherit; font-size:inherit; }
 .sidebar__brand{ display:flex; align-items:center; gap:10px; text-decoration:none; padding:6px 10px 24px; }
 .sidebar__nav{ display:flex; flex-direction:column; gap:2px; flex:1; }
 .sidebar__link{
-  display:block; width:100%; text-align:left;
+  display:flex; align-items:center; gap:10px; width:100%; text-align:left;
   padding:10px 14px; border-radius:var(--radius-s); font-weight:600; font-size:.9rem;
   text-decoration:none; color:var(--slate); border:1px solid transparent; cursor:pointer; background:none;
 }
+.sidebar__link-icon{ display:flex; flex-shrink:0; }
 .sidebar__link:hover{ color:var(--ink); background:var(--crimson-tint); }
 .sidebar__link.is-active{ color:var(--crimson-dark); background:var(--crimson-tint); }
+.sidebar__link.is-active .sidebar__link-icon{ color:var(--crimson-dark); }
 .sidebar__foot{
-  display:flex; flex-direction:column; align-items:flex-start; gap:10px;
+  display:flex; flex-direction:column; align-items:stretch; gap:6px;
   padding-top:16px; margin-top:8px; border-top:1px solid var(--line);
 }
 .sidebar__link--logout{ color:#B4232E; }
 .sidebar__link--logout:hover{ background:#FBEBEB; color:#B4232E; }
+.sidebar__link--bell .sidebar__link-icon{ position:relative; }
 
 body.layout-sidebar .sidebar{ display:flex; }
 body.layout-sidebar #topbar{ display:none; }
@@ -150,17 +158,16 @@ body.layout-sidebar #page-wrap{ margin-left:248px; }
 /* ---------- buttons ---------- */
 .btn{
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  font-weight:700; font-size:.92rem; border-radius:100px; cursor:pointer;
+  font-weight:600; font-size:.92rem; border-radius:var(--radius-s); cursor:pointer;
   border:1px solid transparent; padding:11px 22px; text-decoration:none;
-  transition:transform .12s ease, box-shadow .12s ease;
+  transition:background-color .15s ease, border-color .15s ease;
 }
-.btn:active{ transform:scale(.97); }
 .btn-primary{ background:var(--crimson); color:#fff; }
 .btn-primary:hover{ background:var(--crimson-dark); }
 .btn-ghost{ background:transparent; color:var(--ink); border-color:var(--line); }
 .btn-ghost:hover{ border-color:var(--crimson); color:var(--crimson-dark); }
 .btn-quiet{ background:var(--crimson-tint); color:var(--crimson-dark); }
-.btn-quiet:hover{ background:#e9c6c1; }
+.btn-quiet:hover{ background:#ffb8c8; }
 .btn-danger{ background:#fff; color:#B4232E; border-color:#EFC9C9; }
 .btn-danger:hover{ background:#FBEBEB; }
 .btn:disabled{ opacity:.5; cursor:not-allowed; }
@@ -227,7 +234,7 @@ body.layout-sidebar #page-wrap{ margin-left:248px; }
 @media (max-width:560px){
   .ticket{ flex-direction:column; }
   .ticket__stub{ flex-basis:auto; width:auto; flex-direction:row; padding:14px 22px; }
-  .ticket__divider{ width:auto; height:0; border-left:none; border-top:2px dashed rgba(168,31,53,.25); }
+  .ticket__divider{ width:auto; height:0; border-left:none; border-top:2px dashed rgba(255,56,92,.3); }
   .ticket__stub::before, .ticket__stub::after{ left:auto; top:-9px; }
   .ticket__stub::before{ left:-9px; }
   .ticket__stub::after{ right:-9px; left:auto; }
@@ -282,7 +289,7 @@ body.layout-sidebar #page-wrap{ margin-left:248px; }
   font-size:.86rem; font-weight:500; box-shadow:0 12px 32px rgba(0,0,0,.25);
   animation:toast-in .2s ease;
 }
-.toast.error{ background:#7E1729; }
+.toast.error{ background:#c13515; }
 .toast.success{ background:var(--success); }
 @keyframes toast-in{ from{ opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
 
@@ -299,7 +306,7 @@ body.layout-sidebar #page-wrap{ margin-left:248px; }
   border:1.5px dashed var(--line); border-radius:var(--radius-l);
 }
 .skeleton{
-  background:linear-gradient(90deg,#EFE7E0 25%,#F6F0EB 37%,#EFE7E0 63%);
+  background:linear-gradient(90deg,#F2F2F2 25%,#F7F7F7 37%,#F2F2F2 63%);
   background-size:400% 100%; animation:sk 1.4s ease infinite; border-radius:var(--radius-s);
 }
 @keyframes sk{ 0%{background-position:100% 0} 100%{background-position:0 0} }
@@ -310,7 +317,7 @@ table.data td{ padding:12px; border-bottom:1px solid var(--line); vertical-align
 table.data tr:last-child td{ border-bottom:none; }
 
 .modal-backdrop{
-  position:fixed; inset:0; background:rgba(32,26,27,.45); backdrop-filter:blur(2px);
+  position:fixed; inset:0; background:rgba(0,0,0,.5); backdrop-filter:blur(2px);
   display:flex; align-items:center; justify-content:center; z-index:80; padding:20px;
 }
 .modal{
@@ -340,5 +347,5 @@ table.data tr:last-child td{ border-bottom:none; }
   border:2.5px solid rgba(255,255,255,.4); border-top-color:#fff;
   animation:spin .7s linear infinite; display:inline-block;
 }
-.spinner--dark{ border-color:rgba(32,26,27,.2); border-top-color:var(--ink); }
+.spinner--dark{ border-color:rgba(34,34,34,.2); border-top-color:var(--ink); }
 @keyframes spin{ to{ transform:rotate(360deg); } }

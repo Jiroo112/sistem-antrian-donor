@@ -163,7 +163,7 @@ export async function viewAntrian() {
       tbody.appendChild(el(`
         <tr>
           <td class="mono">${String(a.nomor_urut).padStart(3, '0')}</td>
-          <td>${escapeHtml(a.nama)}</td>
+          <td>${escapeHtml(a.nama)}${a.hasil_screening_kesehatan === 'perlu_pemeriksaan_lanjutan' ? ` <span title="Self-assessment kesehatan saat ambil nomor ini mengarah ke perlu pemeriksaan lanjutan -- periksa lebih teliti saat verifikasi.">⚠️</span>` : ''}</td>
           <td>${escapeHtml(a.golongan_darah)}</td>
           <td><span class="badge ${statusBadgeClass(a.status)}"><i class="badge-dot"></i>${escapeHtml(labelStatusAntrian(a.status))}</span></td>
           <td style="white-space:nowrap;">${renderAksiButtons(a)}</td>

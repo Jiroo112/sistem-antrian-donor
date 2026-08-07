@@ -4,29 +4,29 @@ import { Auth } from '../../js/api.js';
 import { getCurrentUser, clearCurrentUser } from './session.js';
 import { navItemsFor } from './permissions.js';
 import { routeHref, navigate } from './router.js';
+import { icons } from './icons.js';
+
+const LABEL_PERAN = {
+  petugas_loket: 'Petugas Loket',
+  admin_udd: 'Admin UDD',
+  super_admin: 'Super Admin',
+};
+
+function sidebarLinkHtml(path, label, icon) {
+  return `<a class="sidebar__link" href="${routeHref(path)}" data-route="${path}"><span class="sidebar__link-icon">${icon}</span>${escapeHtml(label)}</a>`;
+}
 
 /**
- * Super Admin dapat halaman lebih banyak daripada peran lain (lihat
- * NAV_ITEMS di permissions.js), jadi navbar atas jadi sempit/padat kalau
- * dipaksakan. Untuk peran ini navigasi dipindah ke sidebar kiri (markup
- * statisnya sudah ada di admin_shell.php, tinggal ditampilkan lewat class
- * body "layout-sidebar" -- lihat aturan CSS ".sidebar" & "#page-wrap" di
- * frontend/css/style.css). Peran lain tetap pakai topbar seperti semula.
+ * Sidebar sekarang dipakai SEMUA peran internal yang login (dulu cuma
+ * super_admin, peran lain pakai topbar sempit) -- disamakan dengan pola
+ * yang sudah diterapkan di sisi pendonor supaya konsisten. Guest/belum
+ * login tetap pakai topbar biasa (cuma tombol "Masuk").
  */
-function pakaiSidebar(peran) {
-  return peran === 'super_admin';
-}
-
-function renderLogoutButton(className) {
-  return el(`<button class="${className}" id="btn-logout">Keluar</button>`);
-}
-
 export function renderNav() {
   const loggedIn = Auth.isLoggedIn('internal');
   const user = getCurrentUser();
-  const sidebarMode = loggedIn && pakaiSidebar(user?.peran);
 
-  document.body.classList.toggle('layout-sidebar', sidebarMode);
+  document.body.classList.toggle('layout-sidebar', loggedIn);
 
   navSlot.innerHTML = '';
   sidebarNavSlot.innerHTML = '';
@@ -38,28 +38,17 @@ export function renderNav() {
   }
 
   const items = navItemsFor(user?.peran);
+  items.forEach((item) => {
+    sidebarNavSlot.appendChild(el(sidebarLinkHtml(item.route, item.label, icons[item.icon] || '')));
+  });
 
-  if (sidebarMode) {
-    items.forEach((item) => {
-      sidebarNavSlot.appendChild(el(`<a class="sidebar__link" href="${routeHref(item.route)}" data-route="${item.route}">${escapeHtml(item.label)}</a>`));
-    });
-    sidebarFootSlot.appendChild(el(`<span class="badge badge--info">${escapeHtml(user?.peran || '')}</span>`));
-    sidebarFootSlot.appendChild(renderLogoutButton('sidebar__link sidebar__link--logout'));
-  } else {
-    items.forEach((item) => {
-      navSlot.appendChild(el(`<a class="nav__link" href="${routeHref(item.route)}" data-route="${item.route}">${escapeHtml(item.label)}</a>`));
-    });
-    navSlot.appendChild(el(`<span class="badge badge--info" style="margin:0 6px;">${escapeHtml(user?.peran || '')}</span>`));
-    navSlot.appendChild(renderLogoutButton('nav__link'));
-  }
+  sidebarFootSlot.appendChild(el(`<span class="badge badge--info" style="align-self:flex-start;">${escapeHtml(LABEL_PERAN[user?.peran] || user?.peran || '')}</span>`));
+  sidebarFootSlot.appendChild(el(`<button class="sidebar__link sidebar__link--logout" id="btn-logout"><span class="sidebar__link-icon">${icons.keluar}</span>Keluar</button>`));
 
-  const logoutBtn = document.getElementById('btn-logout');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      Auth.clearToken('internal');
-      clearCurrentUser();
-      toast('Berhasil keluar.', 'success');
-      navigate('/masuk');
-    });
-  }
+  document.getElementById('btn-logout').addEventListener('click', () => {
+    Auth.clearToken('internal');
+    clearCurrentUser();
+    toast('Berhasil keluar.', 'success');
+    navigate('/masuk');
+  });
 }

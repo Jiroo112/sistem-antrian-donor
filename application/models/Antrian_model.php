@@ -155,18 +155,24 @@ class Antrian_model extends CI_Model {
      * (id_jadwal, nomor_urut) di tabel jadi pengaman terakhir kalau 2 request
      * barengan lolos menghitung MAX yang sama -- makanya di-retry beberapa kali.
      */
-    public function create_with_next_nomor($id_pendonor, $id_jadwal, $batas_waktu_checkin, $max_retry = 5)
+    // $hasil_screening_kesehatan: snapshot hasil self-assessment kuesioner
+    // YANG DIISI SAAT INI JUGA (FR-2.2 sekarang inline di alur ambil nomor,
+    // bukan halaman terpisah) -- disimpan di baris antrian ini sendiri
+    // (bukan cuma di riwayat_kesehatan yang bisa ketiban isian berikutnya)
+    // supaya tetap jadi "tanda" permanen milik nomor antrian ini walau
+    // pendonor isi kuesioner lagi di lain waktu untuk pendaftaran berikutnya.
+    public function create_with_next_nomor($id_pendonor, $id_jadwal, $batas_waktu_checkin, $hasil_screening_kesehatan = null, $max_retry = 5)
     {
         for ($i = 0; $i < $max_retry; $i++) {
             $qr_code = bin2hex(random_bytes(16));
 
             $sql = "INSERT INTO {$this->table}
-                        (id_pendonor, id_jadwal, nomor_urut, status, qr_code, batas_waktu_checkin, created_at, updated_at)
-                    SELECT ?, ?, COALESCE(MAX(nomor_urut), 0) + 1, 'menunggu', ?, ?, NOW(), NOW()
+                        (id_pendonor, id_jadwal, nomor_urut, status, hasil_screening_kesehatan, qr_code, batas_waktu_checkin, created_at, updated_at)
+                    SELECT ?, ?, COALESCE(MAX(nomor_urut), 0) + 1, 'menunggu', ?, ?, ?, NOW(), NOW()
                     FROM {$this->table}
                     WHERE id_jadwal = ?";
 
-            $this->db->query($sql, array($id_pendonor, $id_jadwal, $qr_code, $batas_waktu_checkin, $id_jadwal));
+            $this->db->query($sql, array($id_pendonor, $id_jadwal, $hasil_screening_kesehatan, $qr_code, $batas_waktu_checkin, $id_jadwal));
 
             $error = $this->db->error();
             if (empty($error['code'])) {

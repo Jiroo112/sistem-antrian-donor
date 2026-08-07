@@ -10,7 +10,7 @@ function render() {
   const path = currentPath();
   window.scrollTo(0, 0);
   renderNav();
-  document.querySelectorAll('.nav__link').forEach((l) => {
+  document.querySelectorAll('.sidebar__link, .nav__link').forEach((l) => {
     l.classList.toggle('is-active', l.dataset.route === path);
   });
   resolveView(path)();

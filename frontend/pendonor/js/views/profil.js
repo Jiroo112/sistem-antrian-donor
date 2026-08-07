@@ -1,8 +1,10 @@
 import { app } from '../elements.js';
 import { escapeHtml, toast, setLoading, renderAlertError } from '../../../js/shared/dom.js';
 import { Api } from '../../../js/api.js';
+import { statusBadgeClass, fmtTanggalWaktu } from '../../../js/shared/format.js';
 import { pageHeader, val } from '../ui.js';
 import { requireAuth } from '../guards.js';
+import { routeHref } from '../router.js';
 
 /* FR-2.1: Profil & Data Kesehatan Dasar */
 export async function viewProfil() {
@@ -25,9 +27,20 @@ export async function viewProfil() {
 
   const akun = current.akun;
   const riw = current.riwayat_kesehatan || {};
+  const hk = riw.hasil_kuesioner || null;
 
   card.innerHTML = `
     <div id="alert-slot"></div>
+    <div class="card" style="background:var(--paper);border-color:var(--line);margin-bottom:20px;">
+      <p class="eyebrow" style="margin-bottom:4px;">Kuesioner Kesehatan Pra-Donor</p>
+      ${hk
+        ? `<p style="margin:0 0 4px;">Hasil self-assessment terakhir (${fmtTanggalWaktu(hk.diisi_pada)}):
+            <span class="badge ${statusBadgeClass(hk.hasil_screening_awal)}"><i class="badge-dot"></i>${hk.hasil_screening_awal === 'lolos_screening_awal' ? 'Lolos self-assessment' : 'Perlu pemeriksaan lanjutan'}</span></p>
+           <p class="muted" style="margin:0;">Ini cuma self-assessment awal -- keputusan akhir kelayakan donor tetap di tangan petugas medis di lokasi.</p>`
+        : `<p class="muted" style="margin:0;">Kamu belum pernah mengisi kuesioner kesehatan pra-donor.</p>`}
+      <p class="muted" style="margin-top:8px;font-size:.78rem;">Kuesioner ini diisi ulang tiap kali kamu ambil nomor antrian baru, bukan di sini.</p>
+      <a class="btn btn-ghost btn-sm" style="margin-top:4px;" href="${routeHref('/jadwal')}" data-route="/jadwal">Cari Jadwal Donor</a>
+    </div>
     <form id="form-profil">
       <div class="field-row">
         <div class="field">

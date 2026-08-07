@@ -132,7 +132,13 @@ class Profil extends MY_Controller {
     }
 
     /**
-     * FR-2.2: Ambil daftar pertanyaan kuesioner kesehatan pra-donor
+     * FR-2.2: Ambil daftar pertanyaan kuesioner kesehatan pra-donor --
+     * dipakai frontend buat nampilin form kuesionernya di dalam alur
+     * "Ambil Nomor Antrian" (lihat Antrian::ambil()). Pengisian jawabannya
+     * sendiri BUKAN lewat endpoint ini lagi -- dikirim bareng id_jadwal ke
+     * POST /antrian dalam satu request, supaya self-assessment-nya selalu
+     * segar (dicek ulang tiap kali mau ambil nomor), bukan isian lama yang
+     * bisa sudah basi kalau dipisah ke halaman tersendiri.
      * GET /profil/kuesioner
      */
     public function kuesioner_form()
@@ -142,64 +148,6 @@ class Profil extends MY_Controller {
 
         json_response(200, 'success', 'Daftar pertanyaan kuesioner kesehatan pra-donor', [
             'pertanyaan' => $this->config->item('pertanyaan_kuesioner'),
-        ]);
-    }
-
-    /**
-     * FR-2.2: Submit jawaban kuesioner kesehatan pra-donor
-     * POST /profil/kuesioner
-     * Body: { "jawaban": { "kondisi_sehat": "ya", "tidur_cukup": "ya", ... } }
-     */
-    public function kuesioner_submit()
-    {
-        $this->verify_token();
-        $this->get_json_input();
-        $this->config->load('kuesioner_kesehatan');
-
-        $daftar_pertanyaan = $this->config->item('pertanyaan_kuesioner');
-        $jawaban = $this->input->post('jawaban');
-
-        if (!is_array($jawaban) || empty($jawaban)) {
-            json_response(422, 'error', 'Validasi gagal', ['jawaban' => 'Jawaban kuesioner wajib diisi dalam bentuk object/array']);
-            return;
-        }
-
-        $error_tidak_lengkap = [];
-        $flag_risiko = [];
-
-        foreach ($daftar_pertanyaan as $pertanyaan) {
-            $kode = $pertanyaan['kode'];
-
-            if (!isset($jawaban[$kode]) || !in_array($jawaban[$kode], ['ya', 'tidak'], TRUE)) {
-                $error_tidak_lengkap[$kode] = 'Pertanyaan "' . $pertanyaan['teks'] . '" wajib dijawab ya/tidak';
-                continue;
-            }
-
-            if ($jawaban[$kode] === $pertanyaan['jawaban_berisiko']) {
-                $flag_risiko[] = $kode;
-            }
-        }
-
-        if (!empty($error_tidak_lengkap)) {
-            json_response(422, 'error', 'Validasi gagal', $error_tidak_lengkap);
-            return;
-        }
-
-        $hasil_screening_awal = empty($flag_risiko) ? 'lolos_screening_awal' : 'perlu_pemeriksaan_lanjutan';
-
-        $payload = [
-            'jawaban'               => $jawaban,
-            'flag_risiko'           => $flag_risiko,
-            'hasil_screening_awal'  => $hasil_screening_awal,
-            'diisi_pada'            => date('Y-m-d H:i:s'),
-        ];
-
-        $this->Riwayat_kesehatan_model->simpan_kuesioner($this->user_data->id_pendonor, $payload);
-
-        json_response(200, 'success', 'Kuesioner kesehatan berhasil disimpan', [
-            'hasil_screening_awal' => $hasil_screening_awal,
-            'flag_risiko'          => $flag_risiko,
-            'catatan'              => 'Hasil ini hanya self-assessment awal. Keputusan akhir kelayakan donor tetap ditentukan oleh petugas medis/skrining di lokasi.',
         ]);
     }
 

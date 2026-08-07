@@ -81,6 +81,7 @@ export async function viewAntrianSaya() {
             <span>📅 ${fmtTanggal(j.tanggal)}</span>
             <span>⏰ ${escapeHtml(j.slot_waktu || '-')}</span>
             <span class="badge ${statusBadgeClass(a.status)}"><i class="badge-dot"></i>${escapeHtml(labelStatusAntrian(a.status))}</span>
+            ${a.hasil_screening_kesehatan === 'perlu_pemeriksaan_lanjutan' ? `<span class="badge badge--risiko" title="Self-assessment kesehatan saat ambil nomor ini mengarah ke perlu pemeriksaan lanjutan. Keputusan akhir tetap di petugas medis di lokasi."><i class="badge-dot"></i>⚠️ Perlu Perhatian</span>` : ''}
           </div>
           ${a.posisi ? `
             <div style="display:flex;gap:28px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);flex-wrap:wrap;">
@@ -206,7 +207,10 @@ export async function viewAntrianSaya() {
             <h3 style="font-size:1rem;margin:0 0 4px;">${escapeHtml(r.nama_lokasi || 'Lokasi Donor')}</h3>
             <p class="muted" style="margin:0;font-size:.85rem;">📅 ${fmtTanggal(r.tanggal)} · ⏰ ${escapeHtml(r.slot_waktu || '-')} · No. ${String(r.nomor_urut).padStart(3, '0')}</p>
           </div>
-          <span class="badge ${statusBadgeClass(r.status)}"><i class="badge-dot"></i>${escapeHtml(labelStatusAntrian(r.status))}</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <span class="badge ${statusBadgeClass(r.status)}"><i class="badge-dot"></i>${escapeHtml(labelStatusAntrian(r.status))}</span>
+            ${r.hasil_screening_kesehatan === 'perlu_pemeriksaan_lanjutan' ? `<span class="badge badge--risiko"><i class="badge-dot"></i>⚠️</span>` : ''}
+          </div>
         </div>
       `));
     });
