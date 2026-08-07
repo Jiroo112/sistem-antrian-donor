@@ -10,7 +10,7 @@ export function viewMasuk() {
   app.innerHTML = `
     <div class="shell shell--narrow" style="padding:56px 24px 60px;">
       <p class="eyebrow">Selamat datang kembali</p>
-      <h1 style="font-size:1.8rem;">Masuk ke Akun Pendonor</h1>
+      <h1 class="auth-title">Masuk ke Akun Pendonor</h1>
       <div class="card" style="margin-top:18px;">
         <div id="alert-slot"></div>
         <form id="form-masuk">

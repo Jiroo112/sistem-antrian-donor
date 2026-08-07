@@ -9,7 +9,7 @@ export function viewDaftar() {
   app.innerHTML = `
     <div class="shell shell--narrow" style="padding:44px 24px 60px;">
       <p class="eyebrow">Langkah 1 dari 2</p>
-      <h1 style="font-size:1.8rem;">Daftar Sebagai Pendonor</h1>
+      <h1 class="auth-title">Daftar Sebagai Pendonor</h1>
       <p>Data ini dipakai untuk verifikasi identitas &amp; kelayakan dasar sesuai SPO PMI. Setelah daftar, kode OTP akan dikirim ke email kamu.</p>
       <div class="card" style="margin-top:18px;">
         <div id="alert-slot"></div>

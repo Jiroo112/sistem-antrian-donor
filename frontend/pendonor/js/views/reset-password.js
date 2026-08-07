@@ -12,7 +12,7 @@ export function viewResetPassword() {
   app.innerHTML = `
     <div class="shell shell--narrow" style="padding:56px 24px 60px;">
       <p class="eyebrow">Pemulihan akun</p>
-      <h1 style="font-size:1.8rem;">Atur Ulang Kata Sandi</h1>
+      <h1 class="auth-title">Atur Ulang Kata Sandi</h1>
       <p>${tokenDariLink ? 'Buat kata sandi baru untuk akunmu.' : 'Tempelkan token reset yang kamu terima lewat email, lalu buat kata sandi baru.'}</p>
       <div class="card" style="margin-top:18px;">
         <div id="alert-slot"></div>

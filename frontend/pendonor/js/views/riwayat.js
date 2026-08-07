@@ -37,17 +37,28 @@ export async function viewRiwayat() {
   function renderRingkasan(data) {
     const { jumlah_donor_berhasil, boleh_donor_sekarang, estimasi_donor_berikutnya } = data;
     ringkasanSlot.innerHTML = `
-      <div style="display:flex;align-items:center;gap:28px;flex-wrap:wrap;">
-        <div style="flex:0 0 auto;padding-right:28px;border-right:1px solid var(--line);">
+      <style>
+        .rk-row{ display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+        .rk-total{ flex:0 0 auto; padding-right:24px; border-right:1px solid var(--line); }
+        .rk-estimasi{ flex:1 1 220px; min-width:0; }
+        .rk-cta{ flex-shrink:0; }
+        @media (max-width:480px){
+          .rk-total{ flex-basis:100%; padding-right:0; border-right:none; padding-bottom:14px; border-bottom:1px solid var(--line); }
+          .rk-estimasi{ flex-basis:100%; }
+          .rk-cta{ flex-basis:100%; }
+        }
+      </style>
+      <div class="rk-row">
+        <div class="rk-total">
           <p class="eyebrow" style="margin-bottom:4px;white-space:nowrap;">Total donor berhasil</p>
           <div class="mono" style="font-size:1.8rem;font-weight:700;">${jumlah_donor_berhasil}</div>
         </div>
-        <div style="flex:1 1 240px;min-width:0;">
+        <div class="rk-estimasi">
           <p class="muted" style="margin:0 0 4px;font-size:.78rem;font-weight:600;">Estimasi donor berikutnya</p>
           <p class="muted" style="margin:0 0 6px;font-size:.78rem;">Interval minimal antar donor darah adalah 3 bulan sesuai ketentuan PMI.</p>
           <span style="font-size:1rem;font-weight:700;color:${boleh_donor_sekarang ? 'var(--success)' : 'var(--amber)'};">${boleh_donor_sekarang ? 'Sudah bisa mendaftar sekarang' : `Bisa mendaftar mulai ${fmtTanggal(estimasi_donor_berikutnya)}`}</span>
         </div>
-        ${boleh_donor_sekarang ? `<a class="btn btn-primary btn-sm" href="${routeHref('/jadwal')}" data-route="/jadwal" style="flex-shrink:0;">Cari Jadwal Donor</a>` : ''}
+        ${boleh_donor_sekarang ? `<a class="btn btn-primary btn-sm rk-cta" href="${routeHref('/jadwal')}" data-route="/jadwal">Cari Jadwal Donor</a>` : ''}
       </div>
     `;
   }

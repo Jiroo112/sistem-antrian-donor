@@ -39,7 +39,7 @@ export async function viewKartuDonor() {
       .kd-chip{ width:38px; height:28px; border-radius:6px; background:linear-gradient(135deg,#f2d38a,#c9a24a); position:relative; }
       .kd-chip::before, .kd-chip::after{ content:''; position:absolute; left:6px; right:6px; height:1px; background:rgba(0,0,0,.35); }
       .kd-chip::before{ top:9px; } .kd-chip::after{ top:18px; }
-      .kd-name{ position:relative; font-size:1.35rem; font-weight:800; letter-spacing:.03em; margin:22px 0 4px; text-transform:uppercase; }
+      .kd-name{ position:relative; font-size:1.35rem; font-weight:800; letter-spacing:.03em; margin:22px 0 4px; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
       .kd-id{ position:relative; font-family:var(--font-mono); letter-spacing:.12em; font-size:.85rem; color:rgba(255,255,255,.8); }
       .kd-row-bottom{ position:absolute; left:28px; right:28px; bottom:22px; display:flex; align-items:flex-end; justify-content:space-between; }
       .kd-gol-label{ font-size:.62rem; letter-spacing:.14em; color:rgba(255,255,255,.85); text-transform:uppercase; margin-bottom:2px; }
@@ -49,6 +49,12 @@ export async function viewKartuDonor() {
       .kd-status.risiko .dot{ background:#F5C451; }
       .kd-berlaku{ font-size:.68rem; color:rgba(255,255,255,.8); margin-top:6px; text-align:right; }
       .kd-hint{ text-align:center; color:var(--slate); font-size:.78rem; margin-top:16px; }
+      @media (max-width:420px){
+        .kd-card{ aspect-ratio:auto; min-height:190px; padding:20px 20px; }
+        .kd-name{ font-size:1.1rem; margin:16px 0 4px; }
+        .kd-gol-value{ font-size:1.6rem; }
+        .kd-row-bottom{ left:20px; right:20px; bottom:18px; }
+      }
     </style>
 
     ${pageHeader('Area pendonor', 'Kartu Donor Digital', 'Tunjukkan kartu ini ke petugas sebagai identitas pendonor di lokasi.')}

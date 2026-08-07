@@ -67,6 +67,7 @@ button, input, select, textarea{ font-family:inherit; font-size:inherit; }
 /* ---------- layout shells ---------- */
 .shell{ max-width:1080px; margin:0 auto; padding:0 24px; }
 .shell--narrow{ max-width:640px; }
+@media (max-width:400px){ .shell{ padding:0 16px; } }
 
 .topbar{
   position:sticky; top:0; z-index:40;
@@ -76,6 +77,7 @@ button, input, select, textarea{ font-family:inherit; font-size:inherit; }
 .topbar__inner{
   max-width:1080px; margin:0 auto; padding:14px 24px;
   display:flex; align-items:center; justify-content:space-between; gap:16px;
+  flex-wrap:wrap; row-gap:10px;
 }
 .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; }
 .brand__mark{
@@ -87,7 +89,34 @@ button, input, select, textarea{ font-family:inherit; font-size:inherit; }
 .brand__name{ font-family:var(--font-display); font-weight:600; font-size:1.05rem; color:var(--ink); line-height:1.15;}
 .brand__name small{ display:block; font-family:var(--font-body); font-weight:500; font-size:.68rem; color:var(--slate); letter-spacing:.04em; text-transform:uppercase;}
 
-.nav{ display:flex; align-items:center; gap:4px; }
+.nav{ display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
+
+/* ---------- menu-toggle: tombol hamburger, cuma tampil di breakpoint mobile
+   (lihat @media 860px di bawah) -- satu tombol untuk topbar guest (target
+   #topbar) dan satu untuk sidebar pendonor (target #sidebar), lihat
+   data-menu-toggle di pendonor_shell.php dan listenernya di main.js. ---------- */
+.menu-toggle{
+  display:none; align-items:center; justify-content:center;
+  width:38px; height:38px; border-radius:var(--radius-s);
+  border:1px solid var(--line); background:#fff; color:var(--ink);
+  cursor:pointer; flex-shrink:0;
+}
+.menu-toggle:hover{ border-color:var(--crimson); color:var(--crimson-dark); }
+
+@media (max-width:860px){
+  .menu-toggle{ display:inline-flex; }
+  .nav{
+    display:none; flex-basis:100%; flex-direction:column; align-items:stretch; gap:2px;
+    margin-top:12px; padding-top:12px; border-top:1px solid var(--line);
+  }
+  #topbar.is-open .nav{ display:flex; }
+  .nav__link{ width:100%; padding:10px 14px; }
+}
+
+@media (max-width:480px){
+  .topbar__inner{ padding:12px 16px; }
+  .brand__name small{ display:none; }
+}
 .nav__link{
   padding:8px 14px; border-radius:100px; font-weight:600; font-size:.9rem;
   text-decoration:none; color:var(--slate); border:1px solid transparent;
@@ -143,14 +172,27 @@ body.layout-sidebar #topbar{ display:none; }
 body.layout-sidebar #page-wrap{ margin-left:248px; }
 
 @media (max-width: 860px){
+  /* Di bawah 860px sidebar berubah jadi bar tipis (brand + hamburger saja);
+     nav & foot disembunyikan sampai .sidebar diberi class "is-open" oleh
+     listener data-menu-toggle di main.js -- lihat juga blok .menu-toggle
+     & #topbar.is-open di atas untuk pola yang sama pada nav guest. */
   body.layout-sidebar .sidebar{
-    position:static; width:auto; flex-direction:row; flex-wrap:wrap; align-items:center;
+    position:static; width:auto; height:auto; flex-direction:row; flex-wrap:wrap; align-items:center;
     border-right:none; border-bottom:1px solid var(--line);
+    padding:10px 16px;
   }
-  body.layout-sidebar .sidebar__brand{ padding:6px 14px 6px 4px; }
-  body.layout-sidebar .sidebar__nav{ flex-direction:row; flex-wrap:wrap; }
+  body.layout-sidebar .sidebar__brand{ padding:2px 0; margin-right:auto; }
+  body.layout-sidebar .sidebar__brand .brand__name small{ display:none; }
+  body.layout-sidebar .sidebar__nav,
+  body.layout-sidebar .sidebar__foot{ display:none; flex-basis:100%; }
+  body.layout-sidebar .sidebar.is-open .sidebar__nav,
+  body.layout-sidebar .sidebar.is-open .sidebar__foot{ display:flex; }
+  body.layout-sidebar .sidebar__nav{
+    flex-direction:column; gap:2px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line);
+  }
   body.layout-sidebar .sidebar__foot{
-    flex-direction:row; align-items:center; border-top:none; margin-top:0; padding-top:0; margin-left:auto;
+    flex-direction:column; align-items:stretch; margin-top:8px; margin-left:0;
+    border-top:1px dashed var(--line); padding-top:10px;
   }
   body.layout-sidebar #page-wrap{ margin-left:0; }
 }
@@ -320,6 +362,12 @@ body.layout-sidebar #page-wrap{ margin-left:248px; }
 
 /* ---------- misc ---------- */
 .eyebrow{ font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--crimson-dark); }
+.page-title{ font-size:2rem; }
+.auth-title{ font-size:1.8rem; }
+@media (max-width:480px){
+  .page-title{ font-size:1.5rem; }
+  .auth-title{ font-size:1.4rem; }
+}
 .hero{ padding:56px 0 40px; }
 .grid-2{ display:grid; grid-template-columns:1.1fr .9fr; gap:20px; }
 @media (max-width:840px){ .grid-2{ grid-template-columns:1fr; } }

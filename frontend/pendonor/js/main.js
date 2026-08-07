@@ -13,10 +13,23 @@ function render() {
   document.querySelectorAll('.sidebar__link, .nav__link').forEach((l) => {
     l.classList.toggle('is-active', l.dataset.route === path);
   });
+  // Tutup menu hamburger mobile (kalau lagi terbuka) tiap kali pindah halaman.
+  document.querySelectorAll('.menu-toggle').forEach((btn) => {
+    document.getElementById(btn.dataset.menuToggle)?.classList.remove('is-open');
+    btn.setAttribute('aria-expanded', 'false');
+  });
   resolveView(path)();
 }
 
 document.addEventListener('click', (e) => {
+  const toggle = e.target.closest('[data-menu-toggle]');
+  if (toggle) {
+    const target = document.getElementById(toggle.dataset.menuToggle);
+    const isOpen = target?.classList.toggle('is-open');
+    toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    return;
+  }
+
   const a = e.target.closest('a[data-route]');
   if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
   e.preventDefault();

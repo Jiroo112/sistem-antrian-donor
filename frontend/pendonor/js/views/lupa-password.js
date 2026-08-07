@@ -8,7 +8,7 @@ export function viewLupaPassword() {
   app.innerHTML = `
     <div class="shell shell--narrow" style="padding:56px 24px 60px;">
       <p class="eyebrow">Pemulihan akun</p>
-      <h1 style="font-size:1.8rem;">Lupa Kata Sandi</h1>
+      <h1 class="auth-title">Lupa Kata Sandi</h1>
       <p>Masukkan email akunmu. Jika terdaftar, link atur ulang kata sandi akan dikirim ke email tersebut.</p>
       <div class="card" style="margin-top:18px;">
         <div id="alert-slot"></div>

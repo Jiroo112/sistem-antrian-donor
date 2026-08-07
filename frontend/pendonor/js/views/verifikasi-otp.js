@@ -10,7 +10,7 @@ export function viewVerifikasiOtp() {
   app.innerHTML = `
     <div class="shell shell--narrow" style="padding:44px 24px 60px;">
       <p class="eyebrow">Langkah 2 dari 2</p>
-      <h1 style="font-size:1.8rem;">Verifikasi Kode OTP</h1>
+      <h1 class="auth-title">Verifikasi Kode OTP</h1>
       <p>Masukkan 6 digit kode yang dikirim lewat email ke alamat yang kamu daftarkan.</p>
       <div class="card" style="margin-top:18px;">
         <div id="alert-slot"></div>

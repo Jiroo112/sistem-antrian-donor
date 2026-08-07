@@ -64,6 +64,11 @@ export function viewHome() {
       .home-abnb ul.rules-abnb .check{ flex-shrink:0; width:22px; height:22px; border-radius:50%; background:#222222; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; margin-top:1px; }
 
       @media (max-width:840px){ .home-abnb h1{ font-size:2.1rem; } }
+      @media (max-width:420px){
+        .home-abnb h1{ font-size:1.7rem; }
+        .home-abnb .hero-band{ padding:40px 0 32px; }
+        .home-abnb .section-abnb{ padding:36px 16px 56px; }
+      }
     </style>
 
     <div class="home-abnb">

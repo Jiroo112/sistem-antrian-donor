@@ -33,7 +33,7 @@ export async function viewDashboard() {
       <div id="alert-slot"></div>
       <div id="ringkasan-slot" style="margin-bottom:20px;"></div>
 
-      <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:20px;" id="grid-detail">
+      <div class="grid-2" id="grid-detail">
         <div>
           <h2 style="font-size:1.05rem;margin:0 0 10px;">Per Lokasi</h2>
           <div class="card" style="padding:0;overflow:auto;">

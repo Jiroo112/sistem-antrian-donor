@@ -7,7 +7,7 @@ export function pageHeader(eyebrow, title, subtitle) {
   return `
     <div class="shell" style="padding-top:40px;">
       <p class="eyebrow">${eyebrow}</p>
-      <h1 style="font-size:2rem;max-width:620px;">${title}</h1>
+      <h1 class="page-title" style="max-width:620px;">${title}</h1>
       ${subtitle ? `<p style="max-width:620px;">${subtitle}</p>` : ''}
     </div>`;
 }

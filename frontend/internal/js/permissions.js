@@ -13,10 +13,10 @@
  * logika di tiga tempat itu.
  */
 export const NAV_ITEMS = [
+  { route: '/dashboard', label: 'Dashboard', icon: 'dashboard', roles: ['admin_udd', 'super_admin'] },
   { route: '/antrian', label: 'Panggil Antrian', icon: 'antrian', roles: ['petugas_loket', 'super_admin'] },
   { route: '/jadwal', label: 'Kelola Jadwal', icon: 'jadwal', roles: ['admin_udd', 'super_admin'] },
   { route: '/lokasi', label: 'Kelola Lokasi', icon: 'lokasi', roles: ['admin_udd', 'super_admin'] },
-  { route: '/dashboard', label: 'Dashboard', icon: 'dashboard', roles: ['admin_udd', 'super_admin'] },
   { route: '/laporan', label: 'Laporan', icon: 'laporan', roles: ['admin_udd', 'super_admin'] },
   { route: '/pengguna', label: 'Pengguna Internal', icon: 'pengguna', roles: ['super_admin'] },
 ];

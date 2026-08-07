@@ -91,16 +91,16 @@ export async function viewAntrianSaya() {
             ${a.hasil_screening_kesehatan === 'perlu_pemeriksaan_lanjutan' ? `<span class="badge badge--risiko" title="Self-assessment kesehatan saat ambil nomor ini mengarah ke perlu pemeriksaan lanjutan. Keputusan akhir tetap di petugas medis di lokasi."><i class="badge-dot"></i>⚠️ Perlu Perhatian</span>` : ''}
           </div>
           ${a.posisi ? `
-            <div style="display:flex;gap:28px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);flex-wrap:wrap;">
-              <div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);">
+              <div style="min-width:0;">
                 <div class="mono" style="font-size:1.4rem;font-weight:700;">${a.posisi.nomor_sedang_dilayani !== null ? String(a.posisi.nomor_sedang_dilayani).padStart(3, '0') : '-'}</div>
                 <div class="muted" style="font-size:.72rem;">Nomor sedang dilayani</div>
               </div>
-              <div>
+              <div style="min-width:0;">
                 <div class="mono" style="font-size:1.4rem;font-weight:700;">${a.posisi.jumlah_di_depan}</div>
                 <div class="muted" style="font-size:.72rem;">Orang di depan Anda</div>
               </div>
-              <div>
+              <div style="min-width:0;">
                 <div class="mono" style="font-size:1.4rem;font-weight:700;">~${a.posisi.estimasi_menit}<span style="font-size:.8rem;font-weight:600;"> mnt</span></div>
                 <div class="muted" style="font-size:.72rem;">Estimasi tunggu</div>
               </div>
