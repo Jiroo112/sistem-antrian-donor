@@ -3,7 +3,7 @@ import { el, escapeHtml, setLoading, toast } from '../../../js/shared/dom.js';
 import { Api } from '../../../js/api.js';
 import { fmtTanggal, fmtTanggalWaktu, statusBadgeClass, labelStatusAntrian } from '../../../js/shared/format.js';
 import { renderQrCode } from '../qr.js';
-import { pageHeader } from '../ui.js';
+import { pageHeader, emptyState, paginateList, paginationHtml, bindPagination } from '../ui.js';
 import { routeHref } from '../router.js';
 import { requireAuth } from '../guards.js';
 
@@ -21,7 +21,7 @@ export async function viewAntrianSaya() {
     <div class="shell" style="padding:16px 24px 60px;">
       <div id="antrian-aktif-slot" class="card" style="margin-bottom:26px;"><div class="skeleton" style="height:180px;"></div></div>
       <h2 style="font-size:1.1rem;margin-bottom:12px;">Riwayat Antrian</h2>
-      <div id="antrian-riwayat-slot" class="stack"></div>
+      <div id="antrian-riwayat-slot"></div>
     </div>
   `;
 
@@ -33,11 +33,18 @@ export async function viewAntrianSaya() {
   // di-render ulang dari nol tiap loadAntrianSaya() dipanggil.
   let sedangIsiFormJadwalUlang = false;
 
+  // Halaman riwayat dijaga di scope luar (bukan direset tiap loadAntrianSaya)
+  // supaya polling tiap 5 detik tidak melempar pendonor balik ke halaman 1
+  // saat sedang membuka halaman lain di daftar riwayatnya.
+  let daftarRiwayat = [];
+  let halamanRiwayat = 1;
+
   async function loadAntrianSaya() {
     try {
       const res = await Api.antrianSaya();
       renderAntrianAktif(res.data.antrian_aktif);
-      renderRiwayat(res.data.riwayat || []);
+      daftarRiwayat = res.data.riwayat || [];
+      renderRiwayat();
     } catch (e) {
       aktifSlot.innerHTML = `<div class="alert alert-error">${escapeHtml(e.message)}</div>`;
       riwayatSlot.innerHTML = '';
@@ -194,15 +201,17 @@ export async function viewAntrianSaya() {
     }
   }
 
-  function renderRiwayat(list) {
-    if (!list.length) {
-      riwayatSlot.innerHTML = `<div class="empty">Belum ada riwayat antrian.</div>`;
+  function renderRiwayat() {
+    if (!daftarRiwayat.length) {
+      riwayatSlot.innerHTML = emptyState('Belum ada riwayat antrian.');
       return;
     }
+    const { items, page, totalPages } = paginateList(daftarRiwayat, halamanRiwayat);
     riwayatSlot.innerHTML = '';
-    list.forEach((r) => {
-      riwayatSlot.appendChild(el(`
-        <div class="card" style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;">
+    const listCard = el('<div class="list-card"></div>');
+    items.forEach((r) => {
+      listCard.appendChild(el(`
+        <div class="list-row">
           <div>
             <h3 style="font-size:1rem;margin:0 0 4px;">${escapeHtml(r.nama_lokasi || 'Lokasi Donor')}</h3>
             <p class="muted" style="margin:0;font-size:.85rem;">📅 ${fmtTanggal(r.tanggal)} · ⏰ ${escapeHtml(r.slot_waktu || '-')} · No. ${String(r.nomor_urut).padStart(3, '0')}</p>
@@ -213,6 +222,13 @@ export async function viewAntrianSaya() {
           </div>
         </div>
       `));
+    });
+    riwayatSlot.appendChild(listCard);
+    const pagHtml = paginationHtml(page, totalPages);
+    if (pagHtml) riwayatSlot.appendChild(el(pagHtml));
+    bindPagination(riwayatSlot, (delta) => {
+      halamanRiwayat += delta;
+      renderRiwayat();
     });
   }
 

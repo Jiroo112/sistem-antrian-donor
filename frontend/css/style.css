@@ -41,7 +41,7 @@ html{ scroll-behavior:smooth; }
 body{
   margin:0;
   font-family:var(--font-body);
-  background:var(--paper);
+  background:#ffffff;
   color:var(--ink);
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
@@ -183,6 +183,31 @@ body.layout-sidebar #page-wrap{ margin-left:248px; }
   padding:28px;
 }
 
+/* ---------- list-card: satu card membungkus banyak baris, tiap baris
+   dipisah garis bawah (bukan card sendiri-sendiri) -- dipakai untuk daftar
+   lokasi, riwayat antrian, riwayat donor. ---------- */
+.list-card{
+  background:var(--paper-raised);
+  border:1px solid var(--line);
+  border-radius:var(--radius-l);
+  box-shadow:var(--shadow-card);
+  overflow:hidden;
+}
+.list-row{
+  display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  padding:20px 24px;
+  border-bottom:1px solid var(--line);
+  transition:transform .18s ease, background-color .18s ease;
+  transform-origin:center;
+  position:relative;
+}
+.list-row:last-child{ border-bottom:none; }
+.list-row:hover{
+  transform:scale(1.02);
+  background:var(--paper);
+  z-index:1;
+}
+
 .ticket{
   position:relative;
   background:var(--paper-raised);
@@ -302,9 +327,24 @@ body.layout-sidebar #page-wrap{ margin-left:248px; }
 .hr{ border:none; border-top:1px dashed var(--line); margin:20px 0; }
 .muted{ color:var(--slate); font-size:.85rem; }
 .empty{
+  display:flex; flex-direction:column; align-items:center;
   text-align:center; padding:48px 20px; color:var(--slate);
   border:1.5px dashed var(--line); border-radius:var(--radius-l);
 }
+.empty__icon{
+  display:flex; color:#ffb0c2; margin-bottom:14px;
+  animation:float 3s ease-in-out infinite;
+}
+.empty__icon svg{ width:44px; height:44px; }
+@keyframes float{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-8px); }
+}
+.pagination{
+  display:flex; align-items:center; justify-content:center; gap:16px;
+  margin-top:8px; padding-top:4px;
+}
+.pagination__info{ color:var(--slate); font-size:.82rem; font-weight:600; }
 .skeleton{
   background:linear-gradient(90deg,#F2F2F2 25%,#F7F7F7 37%,#F2F2F2 63%);
   background-size:400% 100%; animation:sk 1.4s ease infinite; border-radius:var(--radius-s);

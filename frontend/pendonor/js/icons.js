@@ -21,4 +21,5 @@ export const icons = {
   checklist: svg('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3.5h6a1 1 0 0 1 1 1V6H8V4.5a1 1 0 0 1 1-1Z" fill="currentColor" stroke="none"/><path d="M8.5 12.5l2 2 4-4.5M8.5 17h5"/>'),
   daftar: svg('<circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 12 0v1"/><path d="M19 8v6M22 11h-6"/>'),
   keluar: svg('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>'),
+  kosong: svg('<path d="M3 9.5 5.5 4h13L21 9.5"/><path d="M3 9.5v9A2 2 0 0 0 5 20.5h14a2 2 0 0 0 2-2v-9"/><path d="M3 9.5h18"/><path d="M9.5 13h5"/>'),
 };

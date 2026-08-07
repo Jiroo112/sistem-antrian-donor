@@ -60,6 +60,9 @@ export async function viewDashboard() {
       .dash-card__head .eyebrow{ margin-bottom:2px; }
       .dash-card .stack{ font-size:.9rem; }
       .dash-card__actions{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+      .dash-antrian-row{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+      .dash-antrian-row .lokasi{ color:var(--ink); font-size:.95rem; }
+      .dash-antrian-row .nomor{ font-weight:700; font-size:1.05rem; color:var(--ink); }
     </style>
 
     <div class="shell dash">
@@ -177,9 +180,11 @@ async function loadDashAntrianStatus() {
     const res = await Api.antrianSaya();
     const a = res.data.antrian_aktif;
     slot.innerHTML = a
-      ? `<p>Nomor <strong class="mono">${String(a.nomor_urut).padStart(3, '0')}</strong> di ${escapeHtml((a.jadwal && a.jadwal.nama_lokasi) || 'lokasi donor')}
-          <br><span class="badge ${statusBadgeClass(a.status)}"><i class="badge-dot"></i>${escapeHtml(labelStatusAntrian(a.status))}</span></p>`
-      : `<p class="muted">Kamu belum punya nomor antrian aktif.</p>`;
+      ? `<div class="dash-antrian-row">
+          <span class="lokasi">Nomor <span class="mono nomor">#${String(a.nomor_urut).padStart(3, '0')}</span> di ${escapeHtml((a.jadwal && a.jadwal.nama_lokasi) || 'lokasi donor')}</span>
+          <span class="badge ${statusBadgeClass(a.status)}"><i class="badge-dot"></i>${escapeHtml(labelStatusAntrian(a.status))}</span>
+        </div>`
+      : `<p class="muted" style="margin:0;">Kamu belum punya nomor antrian aktif.</p>`;
     if (statTile) {
       statTile.querySelector('.dash-stat__value').textContent = a ? `#${String(a.nomor_urut).padStart(3, '0')}` : '—';
     }

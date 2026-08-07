@@ -1,7 +1,7 @@
 import { app } from '../elements.js';
 import { el, escapeHtml } from '../../../js/shared/dom.js';
 import { Api } from '../../../js/api.js';
-import { pageHeader } from '../ui.js';
+import { pageHeader, emptyState, paginateList, paginationHtml, bindPagination } from '../ui.js';
 
 /* FR-3.2: Peta / Daftar Lokasi */
 export async function viewLokasi() {
@@ -13,35 +13,42 @@ export async function viewLokasi() {
         <label class="radio-pill" data-val="tetap"><input type="radio" name="jenis" value="tetap">UDD Tetap</label>
         <label class="radio-pill" data-val="mobile_unit"><input type="radio" name="jenis" value="mobile_unit">Unit Bergerak</label>
       </div>
-      <div id="hasil-lokasi" class="stack"></div>
+      <div id="hasil-lokasi"></div>
     </div>
   `;
 
   const hasil = document.getElementById('hasil-lokasi');
   const pills = document.querySelectorAll('#filter-jenis .radio-pill');
 
+  let daftarLokasi = [];
+  let halaman = 1;
+
   async function load(jenis) {
     hasil.innerHTML = `<div class="skeleton" style="height:90px;"></div>`;
     try {
       const res = await Api.petaLokasi(jenis);
-      renderList(res.data);
+      daftarLokasi = res.data || [];
+      halaman = 1;
+      renderList();
     } catch (e) {
       hasil.innerHTML = `<div class="alert alert-error">${escapeHtml(e.message)}</div>`;
     }
   }
 
-  function renderList(list) {
-    if (!list || list.length === 0) {
-      hasil.innerHTML = `<div class="empty">Belum ada lokasi aktif untuk filter ini.</div>`;
+  function renderList() {
+    if (!daftarLokasi.length) {
+      hasil.innerHTML = emptyState('Belum ada lokasi aktif untuk filter ini.');
       return;
     }
+    const { items, page, totalPages } = paginateList(daftarLokasi, halaman);
     hasil.innerHTML = '';
-    list.forEach((lok) => {
+    const listCard = el('<div class="list-card"></div>');
+    items.forEach((lok) => {
       const mapsUrl = (lok.latitude && lok.longitude)
         ? `https://www.google.com/maps?q=${lok.latitude},${lok.longitude}`
         : null;
-      hasil.appendChild(el(`
-        <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+      listCard.appendChild(el(`
+        <div class="list-row">
           <div style="flex:1 1 260px;min-width:0;">
             <span class="badge ${lok.jenis === 'mobile_unit' ? 'badge--info' : 'badge--aktif'}">${lok.jenis === 'mobile_unit' ? 'Unit Bergerak' : 'UDD Tetap'}</span>
             <h3 style="font-size:1.1rem;margin:8px 0 4px;">${escapeHtml(lok.nama_lokasi)}</h3>
@@ -52,6 +59,13 @@ export async function viewLokasi() {
           </div>
         </div>
       `));
+    });
+    hasil.appendChild(listCard);
+    const pagHtml = paginationHtml(page, totalPages);
+    if (pagHtml) hasil.appendChild(el(pagHtml));
+    bindPagination(hasil, (delta) => {
+      halaman += delta;
+      renderList();
     });
   }
 
