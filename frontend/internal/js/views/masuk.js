@@ -37,7 +37,6 @@ export function viewMasuk() {
           <button class="btn btn-primary btn-block" type="submit" id="btn-masuk">Masuk</button>
         </form>
       </div>
-      <p class="muted" style="text-align:center;margin-top:18px;">Kamu pendonor? <a href="${pendonorRoot}/">Ke situs pendonor →</a></p>
     </div>
   `;
   const alertSlot = document.getElementById('alert-slot');

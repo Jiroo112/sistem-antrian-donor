@@ -69,6 +69,32 @@ export function viewHome() {
         .home-abnb .hero-band{ padding:40px 0 32px; }
         .home-abnb .section-abnb{ padding:36px 16px 56px; }
       }
+
+      /* ---- Footer -- data kontak/tautan di bawah ini dummy/placeholder,
+         bukan data instansi nyata ---- */
+      .home-abnb .footer-abnb{ background:#fafafa; border-top:1px solid #ebebeb; padding:48px 24px 28px; }
+      .home-abnb .footer-grid{ display:grid; grid-template-columns:1.4fr repeat(3,1fr); gap:32px; padding-bottom:32px; }
+      @media (max-width:840px){ .home-abnb .footer-grid{ grid-template-columns:repeat(2,1fr); } }
+      @media (max-width:480px){ .home-abnb .footer-grid{ grid-template-columns:1fr; gap:28px; } }
+      .home-abnb .footer-brand .brand-row{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+      .home-abnb .footer-brand .mark{ width:32px; height:32px; border-radius:50%; background:#ff385c; display:flex; align-items:center; justify-content:center; color:#fff; font-size:15px; flex-shrink:0; }
+      .home-abnb .footer-brand p{ font-size:13px; color:#6a6a6a; line-height:1.6; max-width:300px; margin:0 0 16px; }
+      .home-abnb .footer-social{ display:flex; gap:8px; }
+      .home-abnb .footer-social a{ width:34px; height:34px; border-radius:50%; background:#fff; border:1px solid #ddd; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:12px; font-weight:700; color:#222; transition:background-color .15s,border-color .15s,color .15s; }
+      .home-abnb .footer-social a:hover{ background:#ff385c; border-color:#ff385c; color:#fff; }
+      .home-abnb .footer-col h4{ font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#222; margin:0 0 14px; }
+      .home-abnb .footer-col ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+      .home-abnb .footer-col li{ font-size:13.5px; color:#6a6a6a; line-height:1.5; }
+      .home-abnb .footer-col a{ font-size:13.5px; color:#6a6a6a; text-decoration:none; }
+      .home-abnb .footer-col a:hover{ color:#222; text-decoration:underline; }
+      .home-abnb .footer-bottom{
+        border-top:1px solid #ebebeb; padding-top:20px;
+        display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+        font-size:12.5px; color:#6a6a6a;
+      }
+      .home-abnb .footer-bottom .legal-links{ display:flex; gap:16px; flex-wrap:wrap; }
+      .home-abnb .footer-bottom a{ color:#6a6a6a; text-decoration:none; }
+      .home-abnb .footer-bottom a:hover{ text-decoration:underline; color:#222; }
     </style>
 
     <div class="home-abnb">
@@ -139,6 +165,61 @@ export function viewHome() {
           </div>
         </div>
       </section>
+
+      <footer class="footer-abnb">
+        <div class="shell">
+          <div class="footer-grid">
+            <div class="footer-brand">
+              <div class="brand-row">
+                <span class="mark">🩸</span>
+                <strong style="font-size:15px;color:#222222;">Antrian Donor Darah</strong>
+              </div>
+              <p>Layanan digital PMI/UDD untuk pendaftaran dan antrian donor darah online -- memudahkan pendonor mencari jadwal dan memantau posisi antrian secara real-time.</p>
+              <div class="footer-social">
+                <a href="#" aria-label="Instagram">IG</a>
+                <a href="#" aria-label="Facebook">FB</a>
+                <a href="#" aria-label="X / Twitter">X</a>
+                <a href="#" aria-label="YouTube">YT</a>
+              </div>
+            </div>
+            <div class="footer-col">
+              <h4>Layanan</h4>
+              <ul>
+                <li><a href="${routeHref('/jadwal')}" data-route="/jadwal">Cari Jadwal Donor</a></li>
+                <li><a href="${routeHref('/lokasi')}" data-route="/lokasi">Lokasi Donor</a></li>
+                <li><a href="${routeHref('/daftar')}" data-route="/daftar">Daftar Pendonor</a></li>
+                <li><a href="${routeHref('/masuk')}" data-route="/masuk">Masuk ke Akun</a></li>
+              </ul>
+            </div>
+            <div class="footer-col">
+              <h4>Tentang</h4>
+              <ul>
+                <li><a href="#">Tentang Kami</a></li>
+                <li><a href="#">Syarat &amp; Ketentuan</a></li>
+                <li><a href="#">Kebijakan Privasi</a></li>
+                <li><a href="#">Pertanyaan Umum (FAQ)</a></li>
+              </ul>
+            </div>
+            <div class="footer-col">
+              <h4>Hubungi Kami</h4>
+              <ul>
+                <li>📍 Jl. Kesehatan Raya No. 21, Jakarta</li>
+                <li>📞 (021) 555-0182</li>
+                <li>✉️ halo@antriandonor.example</li>
+                <li>🕐 Senin–Sabtu, 08.00–16.00 WIB</li>
+              </ul>
+            </div>
+          </div>
+          <div class="footer-bottom">
+            <span>© 2026 Antrian Donor Darah · PMI / UDD. Seluruh hak cipta dilindungi.</span>
+            <div class="legal-links">
+              <a href="#">Privasi</a>
+              <a href="#">Syarat Layanan</a>
+              <a href="#">Peta Situs</a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   `;
 
