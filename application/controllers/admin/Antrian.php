@@ -118,6 +118,17 @@ class Antrian extends MY_Controller {
 
             $this->Antrian_model->set_status($id_antrian, 'dipanggil');
             $this->notifikasi_giliran_mendekati($antrian->id_jadwal, $antrian->nomor_urut);
+
+            // FIX: kirim notifikasi KE PENDONOR YANG NOMORNYA DIPANGGIL --
+            // sebelumnya cuma notifikasi_giliran_mendekati() yang jalan, itu
+            // ngirim ke pendonor LAIN (yang nomornya beberapa posisi di
+            // depan, buat peringatan dini), bukan ke pemilik nomor ini.
+            $this->load->library('Notifikasi_service');
+            $this->notifikasi_service->kirim($antrian->id_pendonor, 'giliran_mendekati', sprintf(
+                'Nomor antrian Anda #%d sedang dipanggil sekarang! Segera menuju loket check-in.',
+                $antrian->nomor_urut
+            ));
+
             json_response(200, 'success', 'Nomor antrian berhasil dipanggil ulang', $this->Antrian_model->get_by_id($id_antrian));
             return;
         }
@@ -137,6 +148,15 @@ class Antrian extends MY_Controller {
 
         $this->Antrian_model->set_status($next->id_antrian, 'dipanggil');
         $this->notifikasi_giliran_mendekati($id_jadwal, $next->nomor_urut);
+
+        // FIX: sama seperti di atas -- kirim notifikasi ke pemilik nomor
+        // yang baru saja dipanggil, bukan cuma ke yang "mendekati".
+        $this->load->library('Notifikasi_service');
+        $this->notifikasi_service->kirim($next->id_pendonor, 'giliran_mendekati', sprintf(
+            'Nomor antrian Anda #%d sedang dipanggil sekarang! Segera menuju loket check-in.',
+            $next->nomor_urut
+        ));
+
         json_response(200, 'success', 'Nomor antrian berikutnya berhasil dipanggil', $this->Antrian_model->get_by_id($next->id_antrian));
     }
 
