@@ -47,4 +47,12 @@ class Lokasi_model extends CI_Model {
         // hard delete otomatis, tapi mending dicegah eksplisit di sini)
         return $this->db->update($this->table, ['status_lokasi' => 'nonaktif'], ['id_lokasi' => $id_lokasi]);
     }
+
+    // Hard delete beneran -- dipanggil dari admin/Lokasi::hapus_permanen()
+    // yang sudah mastiin dulu lokasi ini belum pernah dipakai di jadwal_donor,
+    // jadi aman dari FK RESTRICT.
+    public function hapus_permanen($id_lokasi)
+    {
+        return $this->db->delete($this->table, ['id_lokasi' => $id_lokasi]);
+    }
 }

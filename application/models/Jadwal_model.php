@@ -125,6 +125,14 @@ class Jadwal_model extends CI_Model {
         return $this->db->get()->result();
     }
 
+    // Dipakai admin/Lokasi::hapus_permanen() -- lokasi cuma boleh dihapus
+    // permanen kalau belum pernah dipakai di jadwal_donor sama sekali
+    // (FK id_lokasi ON DELETE RESTRICT bakal menolak hard delete kalau masih ada).
+    public function count_by_lokasi($id_lokasi)
+    {
+        return $this->db->where('id_lokasi', $id_lokasi)->count_all_results($this->table);
+    }
+
     // Dipakai buat cek bentrok sebelum create/update, karena ada UNIQUE KEY
     // (id_lokasi, tanggal, slot_waktu) di tabel -- kalau nggak dicek dulu,
     // pendonor/admin bakal lihat error MySQL mentah alih-alih pesan yang jelas.

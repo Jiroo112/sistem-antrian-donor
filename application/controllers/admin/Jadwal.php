@@ -134,6 +134,17 @@ class Jadwal extends MY_Controller {
             return;
         }
 
+        // Kolom jadwal_donor.status di database cuma ENUM('aktif','ditutup',
+        // 'dibatalkan') -- kalau ini tidak dicek di sini, nilai status yang
+        // salah (mis. "nonaktif") ditolak diam-diam oleh MySQL, tapi
+        // controller tetap balas 200 sukses padahal statusnya di DB tidak
+        // pernah berubah. Makanya harus divalidasi eksplisit sebelum update().
+        $status = $this->input->post('status');
+        if ($status !== null && $status !== '' && !in_array($status, ['aktif', 'ditutup', 'dibatalkan'], true)) {
+            json_response(400, 'error', "status harus salah satu dari: aktif, ditutup, dibatalkan");
+            return;
+        }
+
         $id_lokasi  = $this->input->post('id_lokasi') ?: $jadwal->id_lokasi;
         $tanggal    = $this->input->post('tanggal') ?: $jadwal->tanggal;
         $slot_waktu = $this->input->post('slot_waktu') ?: $jadwal->slot_waktu;

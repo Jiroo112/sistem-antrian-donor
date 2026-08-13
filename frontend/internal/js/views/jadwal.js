@@ -133,7 +133,7 @@ export async function viewJadwal() {
                 <label for="m-status">Status</label>
                 <select class="input" id="m-status">
                   <option value="aktif" ${existing.status === 'aktif' ? 'selected' : ''}>Aktif</option>
-                  <option value="nonaktif" ${existing.status === 'nonaktif' ? 'selected' : ''}>Nonaktif</option>
+                  <option value="ditutup" ${existing.status === 'ditutup' ? 'selected' : ''}>Ditutup</option>
                 </select>
               </div>` : ''}
             </div>

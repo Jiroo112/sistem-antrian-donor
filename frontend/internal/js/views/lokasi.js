@@ -62,13 +62,18 @@ export async function viewLokasi() {
         <td><span class="badge ${l.status_lokasi === 'nonaktif' ? 'badge--nonaktif' : 'badge--aktif'}"><i class="badge-dot"></i>${escapeHtml(l.status_lokasi || 'aktif')}</span></td>
         <td style="white-space:nowrap;">
           <button class="btn btn-ghost btn-sm" data-edit="${l.id_lokasi}">Ubah</button>
-          <button class="btn btn-danger btn-sm" data-hapus="${l.id_lokasi}">Nonaktifkan</button>
+          ${l.status_lokasi === 'nonaktif'
+            ? `<button class="btn btn-quiet btn-sm" data-aktifkan="${l.id_lokasi}">Aktifkan</button>`
+            : `<button class="btn btn-danger btn-sm" data-nonaktifkan="${l.id_lokasi}">Nonaktifkan</button>`}
+          <button class="btn btn-danger btn-sm" data-hapus="${l.id_lokasi}">Hapus</button>
         </td>
       </tr>
     `).join('');
 
     tbody.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => openModal(list.find((x) => String(x.id_lokasi) === b.dataset.edit))));
-    tbody.querySelectorAll('[data-hapus]').forEach((b) => b.addEventListener('click', () => hapus(b.dataset.hapus)));
+    tbody.querySelectorAll('[data-aktifkan]').forEach((b) => b.addEventListener('click', () => ubahStatus(b.dataset.aktifkan, 'aktif')));
+    tbody.querySelectorAll('[data-nonaktifkan]').forEach((b) => b.addEventListener('click', () => ubahStatus(b.dataset.nonaktifkan, 'nonaktif')));
+    tbody.querySelectorAll('[data-hapus]').forEach((b) => b.addEventListener('click', () => hapusPermanen(b.dataset.hapus)));
 
     paginasiSlot.innerHTML = paginationHtml(page, totalPages);
     bindPagination(paginasiSlot, (delta) => {
@@ -77,11 +82,23 @@ export async function viewLokasi() {
     });
   }
 
-  async function hapus(id) {
-    if (!confirm('Nonaktifkan lokasi ini? Lokasi tidak akan tampil lagi di pencarian pendonor.')) return;
+  async function ubahStatus(id, statusBaru) {
+    const pesanKonfirmasi = statusBaru === 'aktif'
+      ? 'Aktifkan lokasi ini? Lokasi akan tampil lagi di pencarian pendonor.'
+      : 'Nonaktifkan lokasi ini? Lokasi tidak akan tampil lagi di pencarian pendonor.';
+    if (!confirm(pesanKonfirmasi)) return;
     try {
-      await Api.adminLokasiDelete(id);
-      toast('Lokasi dinonaktifkan.', 'success');
+      await Api.adminLokasiUpdate(id, { status_lokasi: statusBaru });
+      toast(statusBaru === 'aktif' ? 'Lokasi diaktifkan.' : 'Lokasi dinonaktifkan.', 'success');
+      load();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function hapusPermanen(id) {
+    if (!confirm('Hapus lokasi ini secara PERMANEN? Tindakan ini tidak bisa dibatalkan. Kalau lokasi ini pernah dipakai di jadwal donor, penghapusan akan ditolak -- nonaktifkan saja untuk kasus itu.')) return;
+    try {
+      await Api.adminLokasiHapusPermanen(id);
+      toast('Lokasi berhasil dihapus permanen.', 'success');
       load();
     } catch (e) { toast(e.message, 'error'); }
   }
